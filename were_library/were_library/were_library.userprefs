@@ -1,8 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\scripts\GameManager.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\scripts\Librarian.cs">
     <Files>
-      <File FileName="Assets\scripts\GameManager.cs" Line="66" Column="3" />
+      <File FileName="Assets\scripts\Werewolf.cs" Line="82" Column="28" />
+      <File FileName="Assets\scripts\GameManager.cs" Line="33" Column="2" />
+      <File FileName="Assets\scripts\Librarian.cs" Line="62" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

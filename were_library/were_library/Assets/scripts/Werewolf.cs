@@ -73,13 +73,13 @@ public class Werewolf: MonoBehaviour
 	public void Update()
 	{
 		if (!seesLibrarian) {
-			if(!Physics.Linecast(transform.position, gameManager.librarian)) {
-				target = gameManager.librarian;
+			if(!Physics.Linecast(transform.position, gameManager.Librarian.transform.position)) {
+				target = gameManager.Librarian;
 				seesLibrarian = true;
 			}
 				}
 		if (!seesLibrarian && !seesVillager) {
-			float d;
+			float d = float.MaxValue;
 						foreach (GameObject v in gameManager.villagers) {
 				if(!Physics.Linecast(transform.position, v.transform.position)) {
 					float newD = Vector3.Distance(transform.position,v.transform.position);
@@ -180,7 +180,7 @@ public class Werewolf: MonoBehaviour
 			currentSpeed = 0;
 			break;
 		case "Running":
-			if(Physics.Linecast(transform.position, target.transform.position) {
+			if(Physics.Linecast(transform.position, target.transform.position)) {
 				seesLibrarian = false;
 				target = null;
 				break;
@@ -319,21 +319,3 @@ public class Werewolf: MonoBehaviour
 	
 	#endregion
 }
-
-public class Point
-{
-	private float x, y;
-	public Point(){
-		x = 0.0f;
-		y = 0.0f;
-	}
-	
-	public Point(float xVal, float yVal){
-		x = xVal;
-		y = yVal;
-	}
-	
-	public float X { get { return x; } set { x = value; } }
-	public float Y { get { return y; } set { y = value; } }
-}
-

@@ -28,6 +28,10 @@ public class GameManager : MonoBehaviour
 	public Object obstaclePrefab;
 	public Object followerPrefab;
 
+	public GameObject librarian;
+	public GameObject[] villagers;
+
+	public GameObject Librarian { get { return librarian; } }
 	//values used by all villagers that are calculated by controller on update
 	private Vector3 flockDirection;
 	private Vector3 centroid;
