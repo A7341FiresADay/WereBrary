@@ -36,6 +36,7 @@ public class GameManager : MonoBehaviour
 	private static GameManager instance;
 	public static GameManager Instance { get { return instance; } }
 
+
 	public Vector3 FlockDirection {
 		get { return flockDirection; }
 	}
@@ -43,6 +44,13 @@ public class GameManager : MonoBehaviour
 	public Vector3 Centroid { get { return centroid; } }
 	public GameObject centroidContainer;
 
+	public GameObject plane;// = GameObject.FindGameObjectWithTag("Plane");
+
+	public GameObject Plane { 
+		get { 
+			return plane; 
+		}
+	}
 
 	// array of obstacles with accessor
 	private  GameObject[] obstacles;
@@ -55,6 +63,8 @@ public class GameManager : MonoBehaviour
 		instance = this;
 
 		obstacles = GameObject.FindGameObjectsWithTag ("Bookshelf");
+
+
 
 	}
 	

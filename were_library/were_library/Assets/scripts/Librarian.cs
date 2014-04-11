@@ -37,13 +37,15 @@ public class Librarian: MonoBehaviour
 
 	float wanderRandom = 0; //current position on projected circle
 	public float wanderRate = 0.1f; //rate at which point on circle moves
-	public int wanderRadius = 50; //radius of projected circle for wander
-	public int wanderDistance = 50; //distance from character to projected circle
+	public int wanderRadius = 30; //radius of projected circle for wander
+	public int wanderDistance = 10; //distance from character to projected circle
 
 	//to determine what has the highest priority for actions
 	bool howlingHeard = false;   							//is there a wolf attacking nearby?
 	bool requestInProgress = false;							//has someone asked you to help them find a book?
 	bool checkingSomething = false;							//are you checking something (waiting at the desk)
+
+	float maxTetherX, maxTetherZ, minTetherX, minTetherZ;
 
 	public Librarian ()
 	{
@@ -61,6 +63,11 @@ public class Librarian: MonoBehaviour
 		gameManager = GameManager.Instance;
 		characterController = gameObject.GetComponent<CharacterController> ();
 		steering = gameObject.GetComponent<Steering> ();
+
+		maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
+		maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
+		minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
+		minTetherZ = gameManager.Plane.renderer.bounds.min.z + 10;
 //		wanderObject = new Wander ();
 	}
 
@@ -73,10 +80,10 @@ public class Librarian: MonoBehaviour
 	public void Update()
 	{
 		steeringForce = Vector3.zero;
-		steeringForce += CalcSteeringForce(); //--> add this later
+		steeringForce += CalcSteeringForce();
 
 		//Logic to determine which state we should be in and what to send to MakeTrans()
-		Debug.Log ("Updating librarian");
+		//Debug.Log ("Updating librarian");
 
 
 		ClampSteering ();
@@ -110,34 +117,42 @@ public class Librarian: MonoBehaviour
 	#region movement Methods
 	private Vector3 StayInBounds ( float radius, Vector3 center)
 	{
-		
 		steeringForce = Vector3.zero;
-		
-		if(transform.position.x > 750)
+		bool nearEdge = false;
+
+		if(transform.position.x > maxTetherX)
 		{
-			steeringForce += steering.Flee(new Vector3(800,0,transform.position.z));
+			//steeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
+			Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
+			nearEdge = true;
 		}
 		
-		if(transform.position.x < 200)
+		else if(transform.position.x < minTetherX)
 		{
-			steeringForce += steering.Flee(new Vector3(150,0,transform.position.z));
+			//steeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
+			Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
+			nearEdge = true;
 		}
 		
-		if(transform.position.z > 715)
+		else if(transform.position.z > maxTetherZ)
 		{
-			steeringForce += steering.Flee(new Vector3(transform.position.x,0,765));
+			//steeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
+			Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
+			nearEdge = true;
 		}
 		
-		if(transform.position.z < 205)
+		else if(transform.position.z < minTetherZ)
 		{
-			steeringForce += steering.Flee(new Vector3(transform.position.x,0,155));
+			//steeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
+			Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
+			nearEdge = true;
 		}
 		
-		if(transform.position.x > 750 || transform.position.x < 200 || 
-		   transform.position.z > 715 || transform.position.z < 205)
+		if(nearEdge)
 		{
-			Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager + "\n");
+			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager + "\n");
 			steeringForce += steering.Seek(gameManager.gameObject);
+			Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 		
 		return steeringForce;
@@ -155,27 +170,31 @@ public class Librarian: MonoBehaviour
 	{
 		Vector3 tempSteering = Vector3.zero;
 
-		switch (currentAction = chooseAction ()) 
-		{
-		case "Waiting":
-			currentSpeed = 0;
-			break;
-		case "Helping":
-			currentSpeed = steering.maxSpeed/2;
-			tempSteering += steering.Seek(target);  //target should be the book in question, could randomly place them? Librarian is leader for the villager
-			break;
-		case "Chasing":
-			currentSpeed = steering.maxSpeed;
-			tempSteering += steering.Seek(target);  //target HERE should be the werewolf in question
-			break;
-		default:
-			currentSpeed = steering.maxSpeed/1.5f;
-			tempSteering += wander();
-			break;
+		if (StayInBounds (100.0f, Vector3.zero) == Vector3.zero) {
+						switch (currentAction = chooseAction ()) {
+						case "Waiting":
+								currentSpeed = 0;
+								break;
+						case "Helping":
+								currentSpeed = steering.maxSpeed / 2;
+								tempSteering += steering.Seek (target);  //target should be the book in question, could randomly place them? Librarian is leader for the villager
+								break;
+						case "Chasing":
+								currentSpeed = steering.maxSpeed;
+								tempSteering += steering.Seek (target);  //target HERE should be the werewolf in question
+								break;
+						default:
+								currentSpeed = steering.maxSpeed / 1.5f;
+								tempSteering += wander ();
+								break;
+						}
+			Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
+				
+				} 
+		else {
+			tempSteering += 10 * (StayInBounds (100.0f, Vector3.zero));
+			Debug.Log("TempSteering Magnitude: " + tempSteering.magnitude);
 		}
-
-		tempSteering += StayInBounds (100.0f, Vector3.zero);
-
 		return tempSteering;
 	}
 
@@ -184,7 +203,7 @@ public class Librarian: MonoBehaviour
 		wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
 		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
 		return new Vector3(this.transform.position.x + (this.transform.forward.x * wanderDistance) +
-		                   (wanderRandom * Mathf.Cos(wanderAngle)), 150,
+		                   (wanderRandom * Mathf.Cos(wanderAngle)), /*150*/10,
 		                   this.transform.position.y + (this.transform.forward.y * wanderDistance) +
 		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +
 		//position of current point on project circle
