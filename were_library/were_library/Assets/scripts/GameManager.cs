@@ -28,6 +28,10 @@ public class GameManager : MonoBehaviour
 	public Object obstaclePrefab;
 	public Object followerPrefab;
 
+	public GameObject librarian;
+	public GameObject[] villagers;
+
+	public GameObject Librarian { get { return librarian; } }
 	//values used by all villagers that are calculated by controller on update
 	private Vector3 flockDirection;
 	private Vector3 centroid;
@@ -36,6 +40,7 @@ public class GameManager : MonoBehaviour
 	private static GameManager instance;
 	public static GameManager Instance { get { return instance; } }
 
+
 	public Vector3 FlockDirection {
 		get { return flockDirection; }
 	}
@@ -43,6 +48,13 @@ public class GameManager : MonoBehaviour
 	public Vector3 Centroid { get { return centroid; } }
 	public GameObject centroidContainer;
 
+	public GameObject plane;// = GameObject.FindGameObjectWithTag("Plane");
+
+	public GameObject Plane { 
+		get { 
+			return plane; 
+		}
+	}
 
 	// array of obstacles with accessor
 	private  GameObject[] obstacles;
@@ -55,6 +67,8 @@ public class GameManager : MonoBehaviour
 		instance = this;
 
 		obstacles = GameObject.FindGameObjectsWithTag ("Bookshelf");
+
+
 
 	}
 	
