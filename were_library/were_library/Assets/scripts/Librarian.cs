@@ -18,7 +18,7 @@ public class Librarian: MonoBehaviour
 	//need some private instance variables for movement
 	private CharacterController characterController;
 	private Steering steering;
-	private GameManager gameManager;
+	public GameManager gameManager;
 	private Vector3 steeringForce, moveDirection;
 
 	private float gravity = 200.0f;
@@ -49,7 +49,7 @@ public class Librarian: MonoBehaviour
 
 	public Librarian ()
 	{
-		//Debug.Log ("Makin a librarian, bitch");
+		//Debug.Log ("Makin a librarian");
 		currentState = 0;
 		nInputs = inputs.Length;
 		centerPoint = new Point (0.0f, 0.0f);
@@ -60,10 +60,11 @@ public class Librarian: MonoBehaviour
 	public void Start()
 	{
 		//Debug.Log ("WHITE PEOPLE");
-		gameManager = GameManager.Instance;
+		//gameManager = GameManager.Instance;
 		characterController = gameObject.GetComponent<CharacterController> ();
 		steering = gameObject.GetComponent<Steering> ();
 
+		Debug.Log(gameManager.ToString());
 		maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
 		maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
 		minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
@@ -80,8 +81,9 @@ public class Librarian: MonoBehaviour
 	public void Update()
 	{
 		steeringForce = Vector3.zero;
-		steeringForce += CalcSteeringForce();
-
+		//steeringForce += CalcSteeringForce();
+		if (gameManager != null)
+			steeringForce += steering.Seek(new Vector3(0, 0, 0));
 		//Logic to determine which state we should be in and what to send to MakeTrans()
 		//Debug.Log ("Updating librarian");
 
@@ -122,35 +124,36 @@ public class Librarian: MonoBehaviour
 
 		if(transform.position.x > maxTetherX)
 		{
-			//steeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
+			steeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
 			Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.x < minTetherX)
 		{
-			//steeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
+			steeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
 			Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.z > maxTetherZ)
 		{
-			//steeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
+			steeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
 			Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.z < minTetherZ)
 		{
-			//steeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
+			steeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
 			Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
 			nearEdge = true;
 		}
+		else {}
 		
 		if(nearEdge)
 		{
-			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager + "\n");
+			Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
 			steeringForce += steering.Seek(gameManager.gameObject);
 			Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
@@ -192,7 +195,9 @@ public class Librarian: MonoBehaviour
 				
 				} 
 		else {
-			tempSteering += 10 * (StayInBounds (100.0f, Vector3.zero));
+			//tempSteering = (tempSteering)/10;
+			//tempSteering.magnitude = tempSteering.magnitude/10;
+			tempSteering = StayInBounds (100.0f, Vector3.zero);
 			Debug.Log("TempSteering Magnitude: " + tempSteering.magnitude);
 		}
 		return tempSteering;
