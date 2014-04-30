@@ -7,7 +7,8 @@ public class Book : MonoBehaviour {
 	public float percentOwned = 100;
 
 	void Start(){
-		GetComponent<TextMesh>().fontSize = 15;
+		GetComponent<TextMesh>().fontSize = 50;
+		transform.localScale = 0.5f;
 	}
 
 	void Update(){

@@ -22,11 +22,11 @@ public class BookselfStocker : MonoBehaviour {
 			currentShelf.book = (GameObject)Instantiate(Book, Vector3.zero, Quaternion.identity);
 			currentShelf.book.transform.parent = currentShelfObject.transform;
 			currentShelf.book.transform.position = currentShelfObject.transform.position;
-			currentShelf.book.transform.position.y = new Vector3(currentShelf.book.transform.position.x, 
+			currentShelf.book.transform.position = new Vector3(currentShelf.book.transform.position.x, 
 			                                                     currentShelf.book.transform.position.y + 2.0f, 
 			                                                     currentShelf.book.transform.position.z);
 
-			currentShelf.book.GetComponent<Book>().BookName = "a";//bookDisp.GetBook();
+			currentShelf.book.GetComponent<Book>().BookName = bookDisp.GetBook();
 
 		}
 

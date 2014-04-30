@@ -61,9 +61,10 @@ public class Librarian: MonoBehaviour
 	{
 		//Debug.Log ("WHITE PEOPLE");
 		gameManager = GameManager.Instance;
+
 		characterController = gameObject.GetComponent<CharacterController> ();
 		steering = gameObject.GetComponent<Steering> ();
-
+		
 		maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
 		maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
 		minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
