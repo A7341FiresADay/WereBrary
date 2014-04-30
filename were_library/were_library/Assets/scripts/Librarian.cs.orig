@@ -60,12 +60,19 @@ public class Librarian: MonoBehaviour
 	public void Start()
 	{
 		//Debug.Log ("WHITE PEOPLE");
-		//gameManager = GameManager.Instance;
+<<<<<<< HEAD
+		gameManager = GameManager.Instance;
 
 		characterController = gameObject.GetComponent<CharacterController> ();
 		steering = gameObject.GetComponent<Steering> ();
 		
+=======
+		//gameManager = GameManager.Instance;
+		characterController = gameObject.GetComponent<CharacterController> ();
+		steering = gameObject.GetComponent<Steering> ();
+
 		Debug.Log(gameManager.ToString());
+>>>>>>> 7574c2c752fd800bf9980743eb834f2c7241504d
 		maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
 		maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
 		minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
