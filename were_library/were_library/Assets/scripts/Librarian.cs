@@ -61,15 +61,8 @@ public class Librarian: MonoBehaviour
 	{
 		//Debug.Log ("WHITE PEOPLE");
 		//gameManager = GameManager.Instance;
-		characterController = gameObject.GetComponent<CharacterController> ();
-		steering = gameObject.GetComponent<Steering> ();
 
-		Debug.Log(gameManager.ToString());
-		maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
-		maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
-		minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
-		minTetherZ = gameManager.Plane.renderer.bounds.min.z + 10;
-//		wanderObject = new Wander ();
+
 	}
 
 	//properties
@@ -77,9 +70,28 @@ public class Librarian: MonoBehaviour
 
 	public void setGameManager (GameObject g) {	gameManager = g.GetComponent<GameManager> (); }
 
+	bool one = false;
 	//UPDATE
 	public void Update()
 	{
+		if(!one){
+			
+			characterController = gameObject.GetComponent<CharacterController> ();
+			steering = gameObject.GetComponent<Steering> ();
+
+			
+			//Debug.Log(gameManager.ToString());
+			maxTetherX = 10;
+			minTetherX = -10;
+			maxTetherZ = 10;
+			minTetherZ = -10;
+			/*maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
+			maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
+			minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
+			minTetherZ = gameManager.Plane.renderer.bounds.min.z + 10;*/
+			//		wanderObject = new Wander ();
+			one = true;
+		}
 		steeringForce = Vector3.zero;
 		steeringForce += CalcSteeringForce();
 		//if (gameManager != null)
