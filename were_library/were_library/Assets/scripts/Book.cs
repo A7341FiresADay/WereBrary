@@ -8,7 +8,7 @@ public class Book : MonoBehaviour {
 
 	void Start(){
 		GetComponent<TextMesh>().fontSize = 50;
-		transform.localScale = 0.5f;
+		transform.localScale = transform.localScale * 0.0005f;
 	}
 
 	void Update(){
