@@ -81,9 +81,9 @@ public class Librarian: MonoBehaviour
 	public void Update()
 	{
 		steeringForce = Vector3.zero;
-		//steeringForce += CalcSteeringForce();
-		if (gameManager != null)
-			steeringForce += steering.Seek(new Vector3(0, 0, 0));
+		steeringForce += CalcSteeringForce();
+		//if (gameManager != null)
+		//	steeringForce += steering.Seek(new Vector3(0, 0, 0));
 		//Logic to determine which state we should be in and what to send to MakeTrans()
 		//Debug.Log ("Updating librarian");
 
@@ -153,11 +153,14 @@ public class Librarian: MonoBehaviour
 		
 		if(nearEdge)
 		{
-			Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
+			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
 			steeringForce += steering.Seek(gameManager.gameObject);
+			//Debug.DrawLine(this.transform.position, gameManager.transform.position);
 			Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
-		
+
+		steeringForce.Normalize();
+		//Debug.DrawLine(
 		return steeringForce;
 	}
 
@@ -171,6 +174,8 @@ public class Librarian: MonoBehaviour
 
 	private Vector3 CalcSteeringForce()
 	{
+		Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)));
+		return steering.Seek(Vector3.zero);
 		Vector3 tempSteering = Vector3.zero;
 
 		if (StayInBounds (100.0f, Vector3.zero) == Vector3.zero) {
@@ -191,16 +196,19 @@ public class Librarian: MonoBehaviour
 								tempSteering += wander ();
 								break;
 						}
-			Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
+			//Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
 				
 				} 
 		else {
 			//tempSteering = (tempSteering)/10;
 			//tempSteering.magnitude = tempSteering.magnitude/10;
 			tempSteering = StayInBounds (100.0f, Vector3.zero);
+			Debug.DrawLine(this.transform.position, Vector3.zero, Color.blue);
 			Debug.Log("TempSteering Magnitude: " + tempSteering.magnitude);
 		}
-		return tempSteering;
+		tempSteering.Normalize();
+		Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5));
+		return tempSteering/5;
 	}
 
 	public Vector3 wander() 
