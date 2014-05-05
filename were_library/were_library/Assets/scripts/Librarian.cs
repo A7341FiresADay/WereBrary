@@ -60,8 +60,9 @@ public class Librarian: MonoBehaviour
 	public void Start()
 	{
 		//Debug.Log ("WHITE PEOPLE");
-		//gameManager = GameManager.Instance;
-
+//		gameManager = GameManager.Instance;
+		gameManager = GameObject.Find("GameManager").getComponent<GameManager>();
+		//setGameManager();
 
 	}
 
@@ -137,28 +138,28 @@ public class Librarian: MonoBehaviour
 		if(transform.position.x > maxTetherX)
 		{
 			steeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
-			Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
+			//Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.x < minTetherX)
 		{
 			steeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
-			Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
+			//Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.z > maxTetherZ)
 		{
 			steeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
-			Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
+			//Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.z < minTetherZ)
 		{
 			steeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
-			Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
+			//Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
 			nearEdge = true;
 		}
 		else {}
@@ -166,12 +167,13 @@ public class Librarian: MonoBehaviour
 		if(nearEdge)
 		{
 			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
-			steeringForce += steering.Seek(gameManager.gameObject);
+			steeringForce += steering.Seek(gameManager.WorldCenter);
 			//Debug.DrawLine(this.transform.position, gameManager.transform.position);
-			Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
+			//Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 
 		steeringForce.Normalize();
+		Debug.Log("SteeringForce from stay in bounds: " + steeringForce.magnitude.ToString());
 		//Debug.DrawLine(
 		return steeringForce;
 	}
@@ -186,8 +188,8 @@ public class Librarian: MonoBehaviour
 
 	private Vector3 CalcSteeringForce()
 	{
-		Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)));
-		return steering.Seek(Vector3.zero);
+		Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)), Color.blue);
+		//return steering.Seek(Vector3.zero);
 		Vector3 tempSteering = Vector3.zero;
 
 		if (StayInBounds (100.0f, Vector3.zero) == Vector3.zero) {
@@ -216,10 +218,10 @@ public class Librarian: MonoBehaviour
 			//tempSteering.magnitude = tempSteering.magnitude/10;
 			tempSteering = StayInBounds (100.0f, Vector3.zero);
 			Debug.DrawLine(this.transform.position, Vector3.zero, Color.blue);
-			Debug.Log("TempSteering Magnitude: " + tempSteering.magnitude);
 		}
 		tempSteering.Normalize();
-		Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5));
+		Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.red);
+		Debug.Log("SteeringForce from calcsteeringforce: " + steeringForce.magnitude.ToString());
 		return tempSteering/5;
 	}
 
