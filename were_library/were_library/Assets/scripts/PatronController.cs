@@ -55,23 +55,88 @@ public class PatronController : MonoBehaviour {
 
 		KnownSelves = new List<bookshelf> ();
 
-		
-		GetComponent<NavMeshAgent>().SetDestination(GameObject.FindGameObjectsWithTag ("Bookshelf")[(int)(Random.value * GameObject.FindGameObjectsWithTag ("Bookshelf").Length)].transform.position);
+		target_random_shelf();
 	}
-	
+
+	Vector3 random_shelf_position(){
+		TargetShelf = GameObject.FindGameObjectsWithTag ("Bookshelf")[(int)(Random.value * GameObject.FindGameObjectsWithTag ("Bookshelf").Length)].GetComponent<bookshelf>();
+		return TargetShelf.gameObject.transform.position;
+	}
+
+	void target_random_shelf(){
+		GetComponent<NavMeshAgent>().SetDestination( random_shelf_position() );
+	}
+
+	void target_obj(Vector3 target){
+		
+		GetComponent<NavMeshAgent>().SetDestination(target);
+	}
+
+	bool target_shelf_known(){
+		foreach(bookshelf shelf in KnownSelves){
+			if(shelf.book.name == BookToFind){
+				return true;
+			}
+		}
+
+		return false;
+	}
+	Vector3 target_book_shelf(){
+		foreach(bookshelf shelf in KnownSelves){
+			if(shelf.book.name == BookToFind){
+				TargetShelf = shelf;
+				return shelf.transform.position;
+			}
+		}
+		return random_shelf_position();
+	}
+
 	// Update is called once per frame
 	void Update () {
 
+		PatronState = PatronStates.wandering;
+
+		if(target_shelf_known () ){ //if you know where to go, go there
+			target_obj ( target_book_shelf() );
+		} else {
+			if(KnownSelves.Contains(TargetShelf)){ //if you don't have a plan and you don't know where to go, go ANYWHERE
+				target_random_shelf();
+			}
+		}
+
+		Debug.Log(TargetShelf);
+		if(Vector3.Distance(TargetShelf.gameObject.transform.position, 
+		                    transform.position) < 4){ // If you're at your target
+			PatronState = PatronStates.searchingSelf; // search the book
+
+			if( target_shelf_known() ){ //or take the book, if you're sure this is the one you want
+				PatronState = PatronStates.takingBook;
+			}
+		}
+
+		if(CarriedBook){
+			
+			if(CarriedBook.GetComponent<Book>().name == BookToFind){ //if you have the book, skedaddle
+				PatronState = PatronStates.leavingWithBook;
+			}
+
+		}
+
+
+
+
+
+
 		switch (PatronState) 
 		{
-			case(PatronStates.wandering):		wander(); 		 break;
-			case(PatronStates.searchingSelf):	searchSelf(); 	 break;
-			case(PatronStates.takingBook):		takeBook(); 	 break;
-			case(PatronStates.askingPatron):	askPatron(); 	 break;
-			case(PatronStates.askingLibrarian):	askLibrarian();  break;
-			case(PatronStates.fleeingWerewolf):	fleeWerewolf();	 break;
-			case(PatronStates.leavingWithBook): leaveWithBook(); break;
-			default:							wander(); 		 break;
+			case(PatronStates.wandering):		wander(); 		 break; //<- do
+			case(PatronStates.searchingSelf):	searchSelf(); 	 break; //<- do
+			case(PatronStates.takingBook):		takeBook(); 	 break; //<- do
+			case(PatronStates.askingPatron):	askPatron(); 	 break; //<- NO
+			case(PatronStates.askingLibrarian):	askLibrarian();  break; //<- NO
+			case(PatronStates.fleeingWerewolf):	fleeWerewolf();	 break; //<- NO
+			case(PatronStates.leavingWithBook): leaveWithBook(); break; //<- do
+			default:							wander(); 		 break; //<- do
 		}
 
 	}
@@ -104,6 +169,8 @@ public class PatronController : MonoBehaviour {
 	void takeBook(){
 		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 4) {
 			TakeTime -= Time.deltaTime;
+
+
 		}
 		if (TakeTime <= 0) {
 			CarriedBook = TargetShelf.book;
@@ -155,8 +222,8 @@ public class PatronController : MonoBehaviour {
 	}
 
 	void leaveWithBook(){
-
+		target_obj(GameObject.Find("Enterance").transform.position);
+		transform.position = GetComponent<NavMeshAgent>().nextPosition;
 	}
 }
-
 
