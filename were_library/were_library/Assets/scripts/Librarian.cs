@@ -21,6 +21,7 @@ public class Librarian: MonoBehaviour
 	public GameManager gameManager;
 	private Vector3 steeringForce, moveDirection;
 
+
 	private float gravity = 200.0f;
 
 	//for the state machine
@@ -53,15 +54,15 @@ public class Librarian: MonoBehaviour
 		currentState = 0;
 		nInputs = inputs.Length;
 		centerPoint = new Point (0.0f, 0.0f);
-		Start ();
+		//Start ();
 	}
 
 	//different from constructor, might restart some Villagers. Otherwise call start along with new()
 	public void Start()
 	{
-		//Debug.Log ("WHITE PEOPLE");
+		Debug.Log ("WHITE PEOPLE");
 //		gameManager = GameManager.Instance;
-		gameManager = GameObject.Find("GameManager").getComponent<GameManager>();
+		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 		//setGameManager();
 
 	}
@@ -132,33 +133,33 @@ public class Librarian: MonoBehaviour
 	#region movement Methods
 	private Vector3 StayInBounds ( float radius, Vector3 center)
 	{
-		steeringForce = Vector3.zero;
+		Vector3 tempSteeringForce = Vector3.zero;
 		bool nearEdge = false;
 
 		if(transform.position.x > maxTetherX)
 		{
-			steeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
+			tempSteeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
 			//Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.x < minTetherX)
 		{
-			steeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
+			tempSteeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
 			//Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.z > maxTetherZ)
 		{
-			steeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
+			tempSteeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
 			//Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
 			nearEdge = true;
 		}
 		
 		else if(transform.position.z < minTetherZ)
 		{
-			steeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
+			tempSteeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
 			//Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
 			nearEdge = true;
 		}
@@ -167,15 +168,15 @@ public class Librarian: MonoBehaviour
 		if(nearEdge)
 		{
 			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
-			steeringForce += steering.Seek(gameManager.WorldCenter);
+			tempSteeringForce += steering.Seek(Vector3.zero);
 			//Debug.DrawLine(this.transform.position, gameManager.transform.position);
 			//Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 
-		steeringForce.Normalize();
-		Debug.Log("SteeringForce from stay in bounds: " + steeringForce.magnitude.ToString());
+		tempSteeringForce.Normalize();
+		Debug.Log("SteeringForce from stay in bounds: " + tempSteeringForce.magnitude.ToString());
 		//Debug.DrawLine(
-		return steeringForce;
+		return tempSteeringForce;
 	}
 
 	private void ClampSteering ()
