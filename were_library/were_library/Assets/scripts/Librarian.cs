@@ -189,7 +189,7 @@ public class Librarian: MonoBehaviour
 
 	private Vector3 CalcSteeringForce()
 	{
-		Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)), Color.blue);
+		//Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)), Color.blue);
 		//return steering.Seek(Vector3.zero);
 		Vector3 tempSteering = Vector3.zero;
 
@@ -209,6 +209,7 @@ public class Librarian: MonoBehaviour
 						default:
 								currentSpeed = steering.maxSpeed / 1.5f;
 								tempSteering += wander ();
+								Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.green);
 								break;
 						}
 			//Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
@@ -217,21 +218,22 @@ public class Librarian: MonoBehaviour
 		else {
 			//tempSteering = (tempSteering)/10;
 			//tempSteering.magnitude = tempSteering.magnitude/10;
-			tempSteering = StayInBounds (100.0f, Vector3.zero);
-			Debug.DrawLine(this.transform.position, Vector3.zero, Color.blue);
+			tempSteering += StayInBounds (100.0f, Vector3.zero);
+			//Debug.DrawLine(this.transform.position, Vector3.zero, Color.blue);
 		}
 		tempSteering.Normalize();
-		Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.red);
+		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering /* 5*/), Color.red);
 		Debug.Log("SteeringForce from calcsteeringforce: " + steeringForce.magnitude.ToString());
-		return tempSteering/5;
+		return tempSteering/*/5*/;
 	}
 
 	public Vector3 wander() 
 	{
 		wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
 		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
+		//Debug.DrawLine(
 		return new Vector3(this.transform.position.x + (this.transform.forward.x * wanderDistance) +
-		                   (wanderRandom * Mathf.Cos(wanderAngle)), /*150*/10,
+		                   (wanderRandom * Mathf.Cos(wanderAngle)), 150,
 		                   this.transform.position.y + (this.transform.forward.y * wanderDistance) +
 		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +
 		//position of current point on project circle
