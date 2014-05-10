@@ -104,7 +104,7 @@ public class PatronController : MonoBehaviour {
 			}
 		}
 
-		Debug.Log(TargetShelf);
+		//Debug.Log(TargetShelf);
 		if(Vector3.Distance(TargetShelf.gameObject.transform.position, 
 		                    transform.position) < 4){ // If you're at your target
 			PatronState = PatronStates.searchingSelf; // search the book

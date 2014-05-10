@@ -47,7 +47,7 @@ public class Librarian: MonoBehaviour
 	bool checkingSomething = false;							//are you checking something (waiting at the desk)
 
 	float maxTetherX, maxTetherZ, minTetherX, minTetherZ;
-
+	GameObject currentPlane;
 	public Librarian ()
 	{
 		//Debug.Log ("Makin a librarian");
@@ -63,6 +63,24 @@ public class Librarian: MonoBehaviour
 		Debug.Log ("WHITE PEOPLE");
 //		gameManager = GameManager.Instance;
 		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+		currentPlane = GameObject.Find ("Plane");
+
+		characterController = gameObject.GetComponent<CharacterController> ();
+		steering = gameObject.GetComponent<Steering> ();
+
+		maxTetherX = 32.0f;
+		minTetherX = -32.0f;
+		maxTetherZ = 37.2f;
+		minTetherZ = -26.8f;
+		//currentPlane.collider.bounds.max.x
+		//plane's position is (0, -0.5, 5.2)
+		/*Debug.Log ("Plane: " + currentPlane.transform.position.ToString ());
+		Debug.Log ("\n Max X: " + currentPlane.collider.bounds.max.x + "\nMax Z: " + currentPlane.collider.bounds.max.z 
+		           + "\nMin X: " + currentPlane.collider.bounds.min.x + "\nMin Z: " + currentPlane.collider.bounds.min.z);
+		Max X: 32
+			Max Z: 37.20094
+				Min X: -32
+				Min Z: -26.79906*/
 		//setGameManager();
 
 	}
@@ -72,35 +90,25 @@ public class Librarian: MonoBehaviour
 
 	public void setGameManager (GameObject g) {	gameManager = g.GetComponent<GameManager> (); }
 
-	bool one = false;
 	//UPDATE
 	public void Update()
 	{
-		if(!one){
-			
-			characterController = gameObject.GetComponent<CharacterController> ();
-			steering = gameObject.GetComponent<Steering> ();
-
-			
-			//Debug.Log(gameManager.ToString());
-			maxTetherX = 10;
-			minTetherX = -10;
-			maxTetherZ = 10;
-			minTetherZ = -10;
-			/*maxTetherX = gameManager.Plane.renderer.bounds.max.x - 10;
-			maxTetherZ = gameManager.Plane.renderer.bounds.max.z - 10;
-			minTetherX = gameManager.Plane.renderer.bounds.min.x + 10;
-			minTetherZ = gameManager.Plane.renderer.bounds.min.z + 10;*/
-			//		wanderObject = new Wander ();
-			one = true;
-		}
 		steeringForce = Vector3.zero;
+
 		steeringForce += CalcSteeringForce();
+		Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
+
 		//if (gameManager != null)
 		//	steeringForce += steering.Seek(new Vector3(0, 0, 0));
 		//Logic to determine which state we should be in and what to send to MakeTrans()
 		//Debug.Log ("Updating librarian");
 
+		steeringForce += StayInBounds(100.0f, Vector3.zero);
+		Debug.Log("After stayinbounds called: " + steeringForce.ToString());
+
+		//steeringForce += steering.Seek (Vector3.zero);
+		//Debug.Log("Tethering! Vector: " + steeringForce.ToString());
+		//Debug.DrawLine(this.transform.position, this.transform.position + (steeringForce * 5), Color.blue);
 
 		ClampSteering ();
 
@@ -109,8 +117,6 @@ public class Librarian: MonoBehaviour
 		moveDirection *= currentSpeed;
 		steeringForce.y = 0;
 		moveDirection += steeringForce * Time.deltaTime;
-
-		//add the stayInBounds here when we know what bounds we are staying in
 
 		//currentSpeed = moveDirection.magnitude;
 		/*if (currentSpeed != moveDirection.magnitude) {
@@ -136,31 +142,35 @@ public class Librarian: MonoBehaviour
 		Vector3 tempSteeringForce = Vector3.zero;
 		bool nearEdge = false;
 
-		if(transform.position.x > maxTetherX)
+		if(transform.position.x > maxTetherX-10)
 		{
 			tempSteeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
 			//Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
+			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteeringForce * 5), Color.red);
 			nearEdge = true;
 		}
 		
-		else if(transform.position.x < minTetherX)
+		else if(transform.position.x < minTetherX+10)
 		{
 			tempSteeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
 			//Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.red);
 			nearEdge = true;
 		}
 		
-		else if(transform.position.z > maxTetherZ)
+		else if(transform.position.z > maxTetherZ-10)
 		{
 			tempSteeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
 			//Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.red);
 			nearEdge = true;
 		}
 		
-		else if(transform.position.z < minTetherZ)
+		else if(transform.position.z < minTetherZ+10)
 		{
 			tempSteeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
 			//Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.red);
 			nearEdge = true;
 		}
 		else {}
@@ -169,14 +179,15 @@ public class Librarian: MonoBehaviour
 		{
 			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
 			tempSteeringForce += steering.Seek(Vector3.zero);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.yellow);
 			//Debug.DrawLine(this.transform.position, gameManager.transform.position);
 			//Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 
-		tempSteeringForce.Normalize();
-		Debug.Log("SteeringForce from stay in bounds: " + tempSteeringForce.magnitude.ToString());
-		//Debug.DrawLine(
-		return tempSteeringForce;
+		//tempSteeringForce.Normalize();
+		//Debug.Log("SteeringForce from stay in bounds: " + tempSteeringForce.magnitude.ToString());
+		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteeringForce * 5), Color.red);
+		return tempSteeringForce * 5;
 	}
 
 	private void ClampSteering ()
@@ -192,8 +203,8 @@ public class Librarian: MonoBehaviour
 		//Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)), Color.blue);
 		//return steering.Seek(Vector3.zero);
 		Vector3 tempSteering = Vector3.zero;
-
-		if (StayInBounds (100.0f, Vector3.zero) == Vector3.zero) {
+		Vector3 boundsSteering = StayInBounds (100.0f, Vector3.zero);
+		//if (boundsSteering == Vector3.zero) {
 						switch (currentAction = chooseAction ()) {
 						case "Waiting":
 								currentSpeed = 0;
@@ -209,21 +220,24 @@ public class Librarian: MonoBehaviour
 						default:
 								currentSpeed = steering.maxSpeed / 1.5f;
 								tempSteering += wander ();
+								//Debug.Log("Wandering! Vector: " +  tempSteering.ToString());
 								Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.green);
 								break;
 						}
 			//Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
 				
-				} 
-		else {
+		//		} 
+		/*else {
 			//tempSteering = (tempSteering)/10;
 			//tempSteering.magnitude = tempSteering.magnitude/10;
-			tempSteering += StayInBounds (100.0f, Vector3.zero);
-			//Debug.DrawLine(this.transform.position, Vector3.zero, Color.blue);
-		}
-		tempSteering.Normalize();
+			tempSteering += boundsSteering;
+			Debug.Log("Tethering! Vector: " + boundsSteering.ToString());
+			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.blue);
+		}*/
+		//Debug.Log("SteeringForce from calcsteeringforce before Normalization: " + steeringForce.magnitude.ToString());
+		//tempSteering.Normalize();
 		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering /* 5*/), Color.red);
-		Debug.Log("SteeringForce from calcsteeringforce: " + steeringForce.magnitude.ToString());
+		//Debug.Log("SteeringForce from calcsteeringforce Normalized: " + steeringForce.magnitude.ToString());
 		return tempSteering/*/5*/;
 	}
 
@@ -234,7 +248,7 @@ public class Librarian: MonoBehaviour
 		//Debug.DrawLine(
 		return new Vector3(this.transform.position.x + (this.transform.forward.x * wanderDistance) +
 		                   (wanderRandom * Mathf.Cos(wanderAngle)), 150,
-		                   this.transform.position.y + (this.transform.forward.y * wanderDistance) +
+		                   this.transform.position.z + (this.transform.forward.z * wanderDistance) +
 		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +
 		//position of current point on project circle
 	}
