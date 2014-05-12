@@ -21,6 +21,7 @@ public class Librarian: MonoBehaviour
 	public GameManager gameManager;
 	private Vector3 steeringForce, moveDirection;
 
+	private Gibberish gibContext;
 
 	private float gravity = 200.0f;
 
@@ -60,7 +61,7 @@ public class Librarian: MonoBehaviour
 	//different from constructor, might restart some Villagers. Otherwise call start along with new()
 	public void Start()
 	{
-		Debug.Log ("WHITE PEOPLE");
+		//Debug.Log ("WHITE PEOPLE");
 //		gameManager = GameManager.Instance;
 		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 		currentPlane = GameObject.Find ("Plane");
@@ -82,7 +83,7 @@ public class Librarian: MonoBehaviour
 				Min X: -32
 				Min Z: -26.79906*/
 		//setGameManager();
-
+		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberish");
 	}
 
 	//properties
@@ -96,7 +97,7 @@ public class Librarian: MonoBehaviour
 		steeringForce = Vector3.zero;
 
 		steeringForce += CalcSteeringForce();
-		Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
+		//Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
 
 		//if (gameManager != null)
 		//	steeringForce += steering.Seek(new Vector3(0, 0, 0));
@@ -104,7 +105,7 @@ public class Librarian: MonoBehaviour
 		//Debug.Log ("Updating librarian");
 
 		steeringForce += StayInBounds(100.0f, Vector3.zero);
-		Debug.Log("After stayinbounds called: " + steeringForce.ToString());
+		//Debug.Log("After stayinbounds called: " + steeringForce.ToString());
 
 		//steeringForce += steering.Seek (Vector3.zero);
 		//Debug.Log("Tethering! Vector: " + steeringForce.ToString());
