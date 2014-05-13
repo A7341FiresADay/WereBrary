@@ -18,13 +18,15 @@ public class Werewolf: MonoBehaviour
 	//need some private instance variables for movement
 	private CharacterController characterController;
 	private Steering steering;
-	private GameManager gameManager;
+	public GameManager gameManager;
 	private Vector3 steeringForce, moveDirection;
+	
+	private Gibberish gibContext;
 	
 	private float gravity = 200.0f;
 	
 	//for the state machine
-	string[] inputs = {"Wandering", "Waiting", "Running", "Chasing"};
+	string[] inputs = {"Wandering", "Waiting", "Helping", "Chasing"};
 	int nInputs;
 	int currentState;
 	string currentAction;
@@ -38,30 +40,51 @@ public class Werewolf: MonoBehaviour
 	
 	float wanderRandom = 0; //current position on projected circle
 	public float wanderRate = 0.1f; //rate at which point on circle moves
-	public int wanderRadius = 50; //radius of projected circle for wander
-	public int wanderDistance = 50; //distance from character to projected circle
-	
+	public int wanderRadius = 30; //radius of projected circle for wander
+	public int wanderDistance = 10; //distance from character to projected circle
+
 	//to determine what has the highest priority for actions
 	bool seesLibrarian = false;
 	bool seesVillager = false;
 	
+	float maxTetherX, maxTetherZ, minTetherX, minTetherZ;
+	GameObject currentPlane;
 	public Werewolf ()
 	{
-		//Debug.Log ("Makin a librarian, bitch");
+		//Debug.Log ("Makin a librarian");
 		currentState = 0;
 		nInputs = inputs.Length;
 		centerPoint = new Point (0.0f, 0.0f);
-		Start ();
+		//Start ();
 	}
 	
 	//different from constructor, might restart some Villagers. Otherwise call start along with new()
 	public void Start()
 	{
 		//Debug.Log ("WHITE PEOPLE");
-		gameManager = GameManager.Instance;
+		//		gameManager = GameManager.Instance;
+		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+		currentPlane = GameObject.Find ("Plane");
+		
 		characterController = gameObject.GetComponent<CharacterController> ();
 		steering = gameObject.GetComponent<Steering> ();
-		//		wanderObject = new Wander ();
+		
+		maxTetherX = 32.0f;
+		minTetherX = -32.0f;
+		maxTetherZ = 37.2f;
+		minTetherZ = -26.8f;
+		//currentPlane.collider.bounds.max.x
+		//plane's position is (0, -0.5, 5.2)
+		/*Debug.Log ("Plane: " + currentPlane.transform.position.ToString ());
+		Debug.Log ("\n Max X: " + currentPlane.collider.bounds.max.x + "\nMax Z: " + currentPlane.collider.bounds.max.z 
+		           + "\nMin X: " + currentPlane.collider.bounds.min.x + "\nMin Z: " + currentPlane.collider.bounds.min.z);
+		Max X: 32
+			Max Z: 37.20094
+				Min X: -32
+				Min Z: -26.79906*/
+		//setGameManager();
+		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberish", Random.Range (2, 5));
+		//Debug.Log ("Gibberish: " + gibContext.FinalReturnGibberish);
 	}
 	
 	//properties
@@ -70,17 +93,17 @@ public class Werewolf: MonoBehaviour
 	public void setGameManager (GameObject g) {	gameManager = g.GetComponent<GameManager> (); }
 	
 	//UPDATE
-	public void Update()
+	public void FixedUpdate()
 	{
-		if (!seesLibrarian) {
+		/*if (!seesLibrarian) {
 			if(!Physics.Linecast(transform.position, gameManager.Librarian.transform.position)) {
 				target = gameManager.Librarian;
 				seesLibrarian = true;
 			}
-				}
+		}
 		if (!seesLibrarian && !seesVillager) {
 			float d = float.MaxValue;
-						foreach (GameObject v in gameManager.villagers) {
+			foreach (GameObject v in gameManager.villagers) {
 				if(!Physics.Linecast(transform.position, v.transform.position)) {
 					float newD = Vector3.Distance(transform.position,v.transform.position);
 					if(newD < d) {
@@ -89,14 +112,26 @@ public class Werewolf: MonoBehaviour
 						target = v;
 					}
 				}
-						}
-				}
+			}
+		}*/
 		steeringForce = Vector3.zero;
-		steeringForce += CalcSteeringForce(); //--> add this later
 		
+		steeringForce += CalcSteeringForce().normalized;
+		//Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
+		
+		//if (gameManager != null)
+		//	steeringForce += steering.Seek(new Vector3(0, 0, 0));
 		//Logic to determine which state we should be in and what to send to MakeTrans()
-		Debug.Log ("Updating librarian");
+		//Debug.Log ("Updating librarian");
 		
+		steeringForce += StayInBounds(100.0f, Vector3.zero).normalized;
+		//Debug.Log("After stayinbounds called: " + steeringForce.ToString());
+		
+		//steeringForce += steering.Seek (Vector3.zero);
+		//Debug.Log("Tethering! Vector: " + steeringForce.ToString());
+		//Debug.DrawLine(this.transform.position, this.transform.position + (steeringForce * 5), Color.blue);
+		
+		ClampSteering ();
 		
 		ClampSteering ();
 		
@@ -104,7 +139,7 @@ public class Werewolf: MonoBehaviour
 		moveDirection.y = 0;
 		moveDirection *= currentSpeed;
 		steeringForce.y = 0;
-		moveDirection += steeringForce * Time.deltaTime;
+		moveDirection += steeringForce;
 		
 		//add the stayInBounds here when we know what bounds we are staying in
 		
@@ -119,47 +154,66 @@ public class Werewolf: MonoBehaviour
 		}
 		
 		// Apply gravity
-		moveDirection.y -= gravity;
+		//moveDirection.y -= gravity;
 		
 		// the CharacterController moves us subject to physical constraints
-		characterController.Move (moveDirection * Time.deltaTime);
+		Debug.DrawLine (transform.position, transform.position + moveDirection);
+		characterController.Move (Vector3.ClampMagnitude(moveDirection, 0.1f));
 		
 	}
 	
 	#region movement Methods
 	private Vector3 StayInBounds ( float radius, Vector3 center)
 	{
+		Vector3 tempSteeringForce = Vector3.zero;
+		bool nearEdge = false;
 		
-		steeringForce = Vector3.zero;
-		
-		if(transform.position.x > 750)
+		if(transform.position.x > maxTetherX-10)
 		{
-			steeringForce += steering.Flee(new Vector3(800,0,transform.position.z));
+			tempSteeringForce += steering.Flee(new Vector3(maxTetherX, 0,transform.position.z));
+			//Debug.Log("Position.x (" + transform.position.x + ") > maxTetherX (" + maxTetherX);
+			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteeringForce * 5), Color.red);
+			nearEdge = true;
 		}
 		
-		if(transform.position.x < 200)
+		else if(transform.position.x < minTetherX+10)
 		{
-			steeringForce += steering.Flee(new Vector3(150,0,transform.position.z));
+			tempSteeringForce += steering.Flee(new Vector3(minTetherX, 0,transform.position.z));
+			//Debug.Log("Position.x (" + transform.position.x + ") < minTetherX (" + minTetherX);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.red);
+			nearEdge = true;
 		}
 		
-		if(transform.position.z > 715)
+		else if(transform.position.z > maxTetherZ-10)
 		{
-			steeringForce += steering.Flee(new Vector3(transform.position.x,0,765));
+			tempSteeringForce += steering.Flee(new Vector3(transform.position.x,0,maxTetherZ));
+			//Debug.Log("Position.z (" + transform.position.x + ") > maxTetherZ (" + maxTetherZ);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.red);
+			nearEdge = true;
 		}
 		
-		if(transform.position.z < 205)
+		else if(transform.position.z < minTetherZ+10)
 		{
-			steeringForce += steering.Flee(new Vector3(transform.position.x,0,155));
+			tempSteeringForce += steering.Flee(new Vector3(transform.position.x,0,minTetherZ));
+			//Debug.Log("Position.z (" + transform.position.x + ") < maxTetherZ (" + maxTetherZ);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.red);
+			nearEdge = true;
+		}
+		else {}
+		
+		if(nearEdge)
+		{
+			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
+			tempSteeringForce += steering.Seek(Vector3.zero);
+			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.yellow);
+			//Debug.DrawLine(this.transform.position, gameManager.transform.position);
+			//Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 		
-		if(transform.position.x > 750 || transform.position.x < 200 || 
-		   transform.position.z > 715 || transform.position.z < 205)
-		{
-			Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager + "\n");
-			steeringForce += steering.Seek(gameManager.gameObject);
-		}
-		
-		return steeringForce;
+		tempSteeringForce.Normalize();
+		//Debug.Log("SteeringForce from stay in bounds: " + tempSteeringForce.magnitude.ToString());
+		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteeringForce * 5), Color.red);
+		return tempSteeringForce;
 	}
 	
 	private void ClampSteering ()
@@ -172,10 +226,12 @@ public class Werewolf: MonoBehaviour
 	
 	private Vector3 CalcSteeringForce()
 	{
+		//Debug.DrawLine(this.transform.position, this.transform.position + (steering.Seek(Vector3.zero)), Color.blue);
+		//return steering.Seek(Vector3.zero);
 		Vector3 tempSteering = Vector3.zero;
-		
-		switch (currentAction = chooseAction ()) 
-		{
+		Vector3 boundsSteering = StayInBounds (100.0f, Vector3.zero);
+		//if (boundsSteering == Vector3.zero) {
+		switch (currentAction = chooseAction ()) {
 		case "Waiting":
 			currentSpeed = 0;
 			break;
@@ -203,13 +259,26 @@ public class Werewolf: MonoBehaviour
 			}
 			break;
 		default:
-			currentSpeed = steering.maxSpeed/1.5f;
-			tempSteering += wander();
+			currentSpeed = steering.maxSpeed / 1.5f;
+			tempSteering += wander ();
+			//Debug.Log("Wandering! Vector: " +  tempSteering.ToString());
+			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.green);
 			break;
 		}
+		//Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
 		
-		tempSteering += StayInBounds (100.0f, Vector3.zero);
-		
+		//		} 
+		/*else {
+			//tempSteering = (tempSteering)/10;
+			//tempSteering.magnitude = tempSteering.magnitude/10;
+			tempSteering += boundsSteering;
+			Debug.Log("Tethering! Vector: " + boundsSteering.ToString());
+			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.blue);
+		}*/
+		//Debug.Log("SteeringForce from calcsteeringforce before Normalization: " + steeringForce.magnitude.ToString());
+		tempSteering.Normalize();
+		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering /* 5*/), Color.red);
+		//Debug.Log("SteeringForce from calcsteeringforce Normalized: " + steeringForce.magnitude.ToString());
 		return tempSteering;
 	}
 	
@@ -217,10 +286,19 @@ public class Werewolf: MonoBehaviour
 	{
 		wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
 		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
+		//Debug.DrawLine(
+		return new Vector3((this.transform.forward.x * wanderDistance) +
+		                   (wanderRadius * Mathf.Cos(wanderAngle)), 0,
+		                   (this.transform.forward.z * wanderDistance) +
+		                   (wanderRadius * Mathf.Sin(wanderAngle)));
+		
+		/*wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
+		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
+		//Debug.DrawLine(
 		return new Vector3(this.transform.position.x + (this.transform.forward.x * wanderDistance) +
 		                   (wanderRandom * Mathf.Cos(wanderAngle)), 150,
-		                   this.transform.position.y + (this.transform.forward.y * wanderDistance) +
-		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +
+		                   this.transform.position.z + (this.transform.forward.z * wanderDistance) +
+		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +*/
 		//position of current point on project circle
 	}
 	
@@ -234,7 +312,7 @@ public class Werewolf: MonoBehaviour
 		if (seesLibrarian)										//is there a wolf attacking nearby?
 			return "Running";
 		if (seesVillager)
-			return "Chasing";									//has someone asked you to help them find a book?								//are you checking something (waiting at the desk)
+			return "Chasing";									//has someone asked you to help them find a book?									//are you checking something (waiting at the desk)
 		return "Wandering";										//otherwise wander aimlessly
 	}
 	
