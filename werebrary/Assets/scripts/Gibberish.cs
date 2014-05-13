@@ -33,6 +33,46 @@ public class Gibberish {
 	void Start () {
 	
 	}
+
+	public static string StringFromPool(string gibberishPool)
+	{
+		string aw = gibberishPool;
+		Markov markovChain = new Markov();		// Set up the Markov chain object
+		//Console.Write("Enter the .txt file to Gibberfy: ");
+		//string fileName = Console.ReadLine();
+		string filePath = gibberishPool + ".txt";
+		
+		markovChain.CreateGraph(filePath);		// Create the chain from the corpus
+		
+		/*Console.Write("\nHow many lines? ");
+		string reply = Console.ReadLine();
+		int nLines = Convert.ToInt32(reply);
+		Console.WriteLine("");*/
+		string toReturn = "";
+		for (int i = 0; i < Random.Range (1, 4); i++)		// Generate 1-4 lines of gibberish
+		{
+			// Generate a sentence of gibberish and print it to the console
+			string[] gibSent = markovChain.GenGibSent(MAX_SENT);
+			
+			string firstChar = gibSent[0].Substring(0, 1).ToUpper();	// Cap first word
+			string capitalized = firstChar
+				+ gibSent[0].Substring(1, gibSent[0].Length-1);
+			gibSent[0] = capitalized;
+			
+			for (int j = 1; i < gibSent.Length; j++)	// Print rest of words
+			{
+				if (gibSent[j] == null)
+				{
+					return toReturn;
+				}
+				else
+					toReturn += " " + gibSent[i];
+			}
+			toReturn += ".";						// Put period at the end
+		}
+
+		return toReturn;
+	}
 		
 	static void PrintSent(string[] sentWords)
 	{

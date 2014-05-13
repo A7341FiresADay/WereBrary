@@ -20,6 +20,7 @@ public class LibraryEntrance : MonoBehaviour {
 			GameObject patron = (GameObject)Instantiate(PatronModel, pos, Quaternion.identity);
 			PatronController pc = patron.AddComponent<PatronController>();
 			pc.BookToFind = bookDisp.GetBook();
+
 		}
 
 	}

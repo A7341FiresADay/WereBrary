@@ -4,12 +4,11 @@ using System.Collections.Generic;
 
 public class PatronController : MonoBehaviour {
 
-	public string BookToFind;
-	public GameObject CarriedBook;
+	public string BookToFind; // title of the desired book.
+	public GameObject CarriedBook; //current book character is carrying.
 	
-	public float SearchTime;
-	public float TakeTime;
-	public float ConversationTime;
+	public float SearchTime; // Time until shelf is searched
+	public float TakeTime; //Time unti book has been taken from shelf
 	public void ResetTimers(){
 		SearchTime = 1000;
 		TakeTime = 1000;
@@ -17,9 +16,18 @@ public class PatronController : MonoBehaviour {
 		
 	}
 	
-	public Vector3 WanderTarget;
-	public bookshelf TargetShelf;
-	public GameObject ConversationTarget;
+	
+	
+	
+	
+	public List<bookshelf> KnownSelves; // Shelves this patron knows the content of.
+	public bookshelf TargetShelf; //shelf to try next.
+	
+	public float TimeToNextTalk; // Time until next conversation is allowed
+	public float ConversationTime; // Time until convo is finsihed
+	public string ConvoText; //gibberish to say in next conversation
+	public GameObject ConversationTarget; //Fellow to talk to.
+
 
 
 	PatronStates patronState;
@@ -46,19 +54,17 @@ public class PatronController : MonoBehaviour {
 	}
 
 
-
-
-
 	// Use this for initialization
 	void Start () {
 		//BookToFind = GameObject.Find ("Shelves").GetComponent<BookselfStocker> ().AssignSeekerBook ();
-
+		TimeToNextTalk = Random.Range(500, 2000);
 		PatronState = PatronStates.wandering;
 
 		KnownSelves = new List<bookshelf> ();
 
 		target_random_shelf();
-
+		
+		ConvoText = Gibberish.StringFromPool("Assets/scripts/PatronGibberish");
 		
 		grey_texture = Resources.Load<Texture2D>("grey");
 		red_texture = Resources.Load<Texture2D>("red");
@@ -83,10 +89,18 @@ public class PatronController : MonoBehaviour {
 		GetComponent<NavMeshAgent>().SetDestination(target);
 	}
 
+	bool tsk = false;
 	bool target_shelf_known(){
+		if (tsk) 
+		{
+			return true;
+		}
 		foreach(bookshelf shelf in KnownSelves){
-			if(shelf.book.name == BookToFind){
-				return true;
+			if(shelf.book){
+				if(shelf.book.GetComponent<Book>().BookName == BookToFind){
+					tsk = true;
+					return true;
+				}
 			}
 		}
 
@@ -94,16 +108,59 @@ public class PatronController : MonoBehaviour {
 	}
 	Vector3 target_book_shelf(){
 		foreach(bookshelf shelf in KnownSelves){
-			if(shelf.book.name == BookToFind){
-				TargetShelf = shelf;
-				return shelf.transform.position;
+			if(shelf.book != null){
+				if(shelf.book.GetComponent<Book>().BookName == BookToFind){
+					TargetShelf = shelf;
+					return shelf.transform.position;
+				}
 			}
 		}
 		return random_shelf_position();
 	}
 
+	GameObject nearest_patron() {
+		Object[] patrons = FindObjectsOfType<PatronController>();
+		GameObject np = ((PatronController)patrons[0]).gameObject;
+		float dist = int.MaxValue;
+		for (int i = 0; i < patrons.Length; i++) {
+			GameObject patron = ((PatronController)patrons[i]).gameObject;
+			float temp_dist = Vector3.Distance(transform.position, patron.transform.position);
+		  	if(dist > temp_dist && patron != gameObject){
+				dist = temp_dist;
+				np = patron;
+			}
+		}
+		return np;
+			
+	}
+	bool gtg = false;
+	bool known = false;
 	// Update is called once per frame
 	void Update () {
+
+		/*
+		if (gtg && !known)
+		{
+			known = true;
+			Debug.Log("it is known");
+			//TELL EACH PATRON WHERE THEIR BOOK IS SO THEY WILL GO FOR IT FIRST!
+			for (int j = 0; j < GameObject.Find("Shelves").transform.childCount; j++) 
+			{
+				GameObject shelf = GameObject.Find ("Shelves").transform.GetChild (j).gameObject;
+				bookshelf s = shelf.GetComponent<bookshelf> ();
+				if (s.book.GetComponent<Book> ().BookName == BookToFind) 
+				{
+					KnownSelves.Add (s);
+				}
+			}
+		}
+		gtg = true;
+		//FOR DEBUG ONLY
+		*/
+		
+		
+		TimeToNextTalk -= Random.Range(0, 100) * Time.deltaTime;
+
 
 		var new_patron_state = PatronStates.wandering;
 		if(target_shelf_known () ){ //if you know where to go, go there
@@ -115,7 +172,7 @@ public class PatronController : MonoBehaviour {
 		}
 
 		//Debug.Log(TargetShelf);
-		if(Vector3.Distance(TargetShelf.gameObject.transform.position, transform.position) < 4){ // If you're at your target
+		if(Vector3.Distance(TargetShelf.gameObject.transform.position, transform.position) < 2){ // If you're at your target
 			new_patron_state = PatronStates.searchingSelf; // search the book
 
 			if( target_shelf_known() ){ //or take the book, if you're sure this is the one you want
@@ -123,12 +180,18 @@ public class PatronController : MonoBehaviour {
 			}
 		}
 
-		if(CarriedBook){
-			
-			if(CarriedBook.GetComponent<Book>().name == BookToFind){ //if you have the book, skedaddle
+		if(CarriedBook != null){
+			Debug.Log("exists");
+			Debug.Log(CarriedBook.GetComponent<Book>().BookName);
+			if(CarriedBook.GetComponent<Book>().BookName == BookToFind){ //if you have the book, skedaddle
 				new_patron_state = PatronStates.leavingWithBook;
 			}
+		}
 
+		GameObject np = nearest_patron ();
+		if (Vector3.Distance (np.transform.position, transform.position) < 4 && TimeToNextTalk <= 0 && np != gameObject && CarriedBook == null) {
+			new_patron_state = PatronStates.askingPatron;
+			ConversationTarget = np;
 		}
 
 		PatronState = new_patron_state;
@@ -151,14 +214,8 @@ public class PatronController : MonoBehaviour {
 	}
 
 
-
-
-
-	public List<bookshelf> KnownSelves;
-
-
 	void wander(){
-
+		GetComponent<NavMeshAgent> ().Resume ();
 		transform.position = GetComponent<NavMeshAgent>().nextPosition;
 
 		//GameObject.FindGameObjectsWithTag ("Bookshelf");
@@ -166,7 +223,8 @@ public class PatronController : MonoBehaviour {
 
 
 	void searchSelf(){
-		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 4) {
+		GetComponent<NavMeshAgent> ().Stop ();
+		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 2) {
 			SearchTime -= Time.deltaTime * 200;
 		}
 		if (SearchTime <= 0) {
@@ -176,7 +234,8 @@ public class PatronController : MonoBehaviour {
 	}
 
 	void takeBook(){
-		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 4) {
+		GetComponent<NavMeshAgent> ().Stop ();
+		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 2) {
 			TakeTime -= Time.deltaTime * 200;
 
 
@@ -189,32 +248,23 @@ public class PatronController : MonoBehaviour {
 
 
 	void askPatron(){
-		/*if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 4) {
-			ConversationTime -= Time.deltaTime;
+		GetComponent<NavMeshAgent> ().Stop ();
+		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 4) {
+			ConversationTime -= Time.deltaTime * 200;
+			// Debug.Log( Gibberish.StringFromPool("Assets/scripts/PatronGibberish") ); <-- gibberish
 		}
 		if (ConversationTime <= 0) {
 			ResetTimers();
-			//1- Take knowledge of desired book. 
-			List<bookshelf> TargetKnownShelves = ConversationTarget.GetComponent<PatronController>().KnownSelves;
-			if(!KnownSelves.Exists(shelf => shelf.getComponent<bookshelf>().books.contains(BookToFind))){ //If you don't know about your own book
-
-				if(TargetKnownShelves.Exists(shelf => shelf.getComponent<bookshelf>().books.contains(BookToFind)) ){//And they do know about it (must change to check what is on known shelves)
-
-				} else {
-					KnownSelves.Add(TargetKnownShelves[Random.value * TargetKnownShelves.Count]);
-				}
-			} else {
-				KnownSelves.Add(TargetKnownShelves[Random.value * TargetKnownShelves.Count]);
-			}
-
-			//2- Take knowledge of any other book
 			
-		}*/
+			ConvoText = Gibberish.StringFromPool("Assets/scripts/PatronGibberish");
+			KnownSelves.AddRange( ConversationTarget.GetComponent<PatronController>().KnownSelves );
+			TimeToNextTalk = Random.Range(500, 2000);
+		}
 }
 
 	void askLibrarian(){
 
-		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 4) {
+		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 2) {
 			ConversationTime -= Time.deltaTime;
 		}
 		if (ConversationTime <= 0) {
@@ -231,6 +281,8 @@ public class PatronController : MonoBehaviour {
 	}
 
 	void leaveWithBook(){
+		
+		GetComponent<NavMeshAgent> ().Resume ();
 		target_obj(GameObject.Find("Enterance").transform.position);
 		transform.position = GetComponent<NavMeshAgent>().nextPosition;
 	}
@@ -262,10 +314,16 @@ public class PatronController : MonoBehaviour {
 				GUI.DrawTexture(ui_pos, blue_texture);
 			break;
 			case(PatronStates.askingPatron):
-			
+				
+
 				GUI.DrawTexture(ui_pos, grey_texture);
 				ui_pos.width =  ConversationTime/4/d;
 				GUI.DrawTexture(ui_pos, yellow_texture);
+
+				ui_pos.y -= 40.0f/d;
+				ui_pos.width = 250/d;
+
+			GUI.Box(ui_pos,ConvoText  );
 			break;
 			case(PatronStates.askingLibrarian):
 				GUI.DrawTexture(ui_pos, grey_texture);

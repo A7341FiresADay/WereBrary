@@ -33,13 +33,28 @@ public class CameraController : MonoBehaviour {
 		if (time_since_move > move_in ) {
 			time_since_move = 0.0f;
 			move_in = Random.Range(15.0f, 35.0f);
-			target_pos = new Vector3(Random.Range(-30, 15), transform.position.y, Random.Range(-15, 30));
+
+			if(Random.Range(0, 100) < 50){
+				if(Random.Range(0, 1) == 1){
+					target_pos = new Vector3( 15, transform.position.y, Random.Range(-15, 30));
+				} else {
+					target_pos = new Vector3(-30, transform.position.y, Random.Range(-15, 30));
+				}
+			}
+			else {
+				if(Random.Range(0, 100) < 50){
+					target_pos = new Vector3( Random.Range(-30, 15), transform.position.y, -15);
+				} else {
+					target_pos = new Vector3(Random.Range(-30, 15), transform.position.y, 30);
+				}
+			}
+
 		}
 		if (Vector3.Distance (target_pos, transform.position) > 3) {
 
-		
-
+			
 			float move_speed = 2.0f;
+
 			if (transform.position.x < target_pos.x) {
 				transform.position = new Vector3(transform.position.x + (move_speed * Time.deltaTime) ,transform.position.y, transform.position.z);
 			} else {
