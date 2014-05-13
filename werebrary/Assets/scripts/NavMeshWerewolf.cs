@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class NavMeshWerewolf : MonoBehaviour {
-	
+
+	public ParticleSystem Blood;
 	public string BookToFind; // title of the desired book.
 	public GameObject CarriedBook; //current book character is carrying.
 	public GameObject chasedPatron;
@@ -182,6 +183,10 @@ public class NavMeshWerewolf : MonoBehaviour {
 		else {
 			target_obj(nearest_patron().transform.position);
 				}
+		if (Vector3.Distance (transform.position, nearest_patron ().transform.position) < 2) {
+			Instantiate(Blood, nearest_patron ().transform.position, Quaternion.LookRotation(Vector3.up));
+			Destroy(nearest_patron ());
+				}
 		/*if(target_shelf_known () ){ //if you know where to go, go there
 			target_obj ( target_book_shelf() );
 		} else {
@@ -304,6 +309,13 @@ public class NavMeshWerewolf : MonoBehaviour {
 		GetComponent<NavMeshAgent> ().Resume ();
 		target_obj(GameObject.Find("Enterance").transform.position);
 		transform.position = GetComponent<NavMeshAgent>().nextPosition;
+	}
+
+	void OnCollisionEnter(Collision col) {
+		if (col.gameObject == this.nearest_patron ()) {
+			Instantiate(Blood, col.transform.position, Quaternion.LookRotation(Vector3.up));
+			Destroy(col.gameObject);
+				}
 	}
 	
 	public Texture grey_texture;

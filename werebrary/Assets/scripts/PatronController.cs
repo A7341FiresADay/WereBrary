@@ -301,7 +301,7 @@ public class PatronController : MonoBehaviour {
 	void fleeWerewolf(){
 		GameObject nw = nearest_werewolf();
 
-		Vector3 flee_target = transform.position - 10*(transform.position - nw.transform.position);
+		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position;
 		flee_target.y = transform.position.y;
 		GetComponent<NavMeshAgent>().SetDestination(flee_target);
 
