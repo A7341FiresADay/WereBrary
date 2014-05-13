@@ -97,7 +97,7 @@ public class Librarian: MonoBehaviour
 	{
 		steeringForce = Vector3.zero;
 
-		steeringForce += CalcSteeringForce();
+		steeringForce += CalcSteeringForce()/5;
 		//Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
 
 		//if (gameManager != null)
@@ -105,7 +105,7 @@ public class Librarian: MonoBehaviour
 		//Logic to determine which state we should be in and what to send to MakeTrans()
 		//Debug.Log ("Updating librarian");
 
-		steeringForce += StayInBounds(100.0f, Vector3.zero);
+		steeringForce += StayInBounds(100.0f, Vector3.zero)*50;
 		//Debug.Log("After stayinbounds called: " + steeringForce.ToString());
 
 		//steeringForce += steering.Seek (Vector3.zero);
@@ -114,12 +114,16 @@ public class Librarian: MonoBehaviour
 
 		ClampSteering ();
 
+		ClampSteering ();
+		
 		moveDirection = transform.forward;
 		moveDirection.y = 0;
 		moveDirection *= currentSpeed;
 		steeringForce.y = 0;
 		moveDirection += steeringForce * Time.deltaTime;
-
+		
+		//add the stayInBounds here when we know what bounds we are staying in
+		
 		//currentSpeed = moveDirection.magnitude;
 		/*if (currentSpeed != moveDirection.magnitude) {
 			moveDirection = moveDirection.normalized * currentSpeed;
@@ -186,10 +190,10 @@ public class Librarian: MonoBehaviour
 			//Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 
-		//tempSteeringForce.Normalize();
+		tempSteeringForce.Normalize();
 		//Debug.Log("SteeringForce from stay in bounds: " + tempSteeringForce.magnitude.ToString());
 		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteeringForce * 5), Color.red);
-		return tempSteeringForce * 5;
+		return tempSteeringForce;
 	}
 
 	private void ClampSteering ()
@@ -237,10 +241,10 @@ public class Librarian: MonoBehaviour
 			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.blue);
 		}*/
 		//Debug.Log("SteeringForce from calcsteeringforce before Normalization: " + steeringForce.magnitude.ToString());
-		//tempSteering.Normalize();
+		tempSteering.Normalize();
 		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering /* 5*/), Color.red);
 		//Debug.Log("SteeringForce from calcsteeringforce Normalized: " + steeringForce.magnitude.ToString());
-		return tempSteering/*/5*/;
+		return tempSteering;
 	}
 
 	public Vector3 wander() 
@@ -248,10 +252,18 @@ public class Librarian: MonoBehaviour
 		wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
 		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
 		//Debug.DrawLine(
+		return new Vector3((this.transform.forward.x * wanderDistance) +
+		                                   (wanderRadius * Mathf.Cos(wanderAngle)), 0,
+		                                   (this.transform.forward.z * wanderDistance) +
+		                                   (wanderRadius * Mathf.Sin(wanderAngle)));
+
+		/*wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
+		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
+		//Debug.DrawLine(
 		return new Vector3(this.transform.position.x + (this.transform.forward.x * wanderDistance) +
 		                   (wanderRandom * Mathf.Cos(wanderAngle)), 150,
 		                   this.transform.position.z + (this.transform.forward.z * wanderDistance) +
-		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +
+		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +*/
 		//position of current point on project circle
 	}
 
