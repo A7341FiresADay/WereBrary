@@ -13,7 +13,6 @@ public class PatronController : MonoBehaviour {
 		SearchTime = 1000;
 		TakeTime = 1000;
 		ConversationTime = 1000;
-		
 	}
 	
 	
@@ -131,8 +130,26 @@ public class PatronController : MonoBehaviour {
 			}
 		}
 		return np;
-			
 	}
+
+	GameObject nearest_werewolf() {
+		/*
+		Object[] werewolves = FindObjectsOfType<NavMeshWerewolf>();
+		GameObject nw = ((NavMeshWerewolf)werewolves[0]).gameObject;
+		float dist = int.MaxValue;
+		for (int i = 0; i < werewolves.Length; i++) {
+			GameObject werewolf = ((NavMeshWerewolf)werewolves[i]).gameObject;
+			float temp_dist = Vector3.Distance(transform.position, werewolf.transform.position);
+			if(dist > temp_dist && werewolf != gameObject){
+				dist = temp_dist;
+				nw = werewolf;
+			}
+		}
+		return nw;
+		*/
+		return GameObject.Find("wolf");
+	}
+
 	bool gtg = false;
 	bool known = false;
 	// Update is called once per frame
@@ -192,6 +209,11 @@ public class PatronController : MonoBehaviour {
 		if (Vector3.Distance (np.transform.position, transform.position) < 4 && TimeToNextTalk <= 0 && np != gameObject && CarriedBook == null) {
 			new_patron_state = PatronStates.askingPatron;
 			ConversationTarget = np;
+		}
+
+		GameObject nw = nearest_werewolf();
+		if (Vector3.Distance (nw.transform.position, transform.position) < 2) {
+			new_patron_state = PatronStates.fleeingWerewolf;
 		}
 
 		PatronState = new_patron_state;
@@ -277,6 +299,13 @@ public class PatronController : MonoBehaviour {
 	}
 
 	void fleeWerewolf(){
+		GameObject nw = nearest_werewolf();
+
+		Vector3 flee_target = transform.position - 10*(transform.position - nw.transform.position);
+		flee_target.y = transform.position.y;
+		GetComponent<NavMeshAgent>().SetDestination(flee_target);
+
+
 
 	}
 
@@ -323,7 +352,10 @@ public class PatronController : MonoBehaviour {
 				ui_pos.y -= 40.0f/d;
 				ui_pos.width = 250/d;
 
-			GUI.Box(ui_pos,ConvoText  );
+				ui_pos.y -= 30.0f;
+				ui_pos.height += 30.0f;
+				GUI.DrawTexture(ui_pos, grey_texture);
+				GUI.TextField(ui_pos,ConvoText );
 			break;
 			case(PatronStates.askingLibrarian):
 				GUI.DrawTexture(ui_pos, grey_texture);

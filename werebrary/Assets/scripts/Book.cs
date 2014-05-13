@@ -13,7 +13,7 @@ public class Book : MonoBehaviour {
 
 	void Update(){
 		GetComponent<TextMesh>().text = BookName;
-		GetComponent<TextMesh>().color = new Color(1, 1, 1, percentOwned/100);
+		GetComponent<TextMesh>().color = new Color(1, 1, 1, 0/100);
 
 		transform.LookAt(GameObject.Find("Main Camera").transform);
 		
