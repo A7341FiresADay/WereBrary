@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -62,8 +62,9 @@ public class PatronController : MonoBehaviour {
 		KnownSelves = new List<bookshelf> ();
 
 		target_random_shelf();
-		
-		ConvoText = Gibberish.StringFromPool("Assets/scripts/PatronGibberish");
+
+
+		ConvoText = new Gibberish ("Assets/scripts/PatronGibberish", Random.Range (2, 5)).FinalReturnGibberish;
 		
 		grey_texture = Resources.Load<Texture2D>("grey");
 		red_texture = Resources.Load<Texture2D>("red");
@@ -133,7 +134,7 @@ public class PatronController : MonoBehaviour {
 	}
 
 	GameObject nearest_werewolf() {
-		/*
+
 		Object[] werewolves = FindObjectsOfType<NavMeshWerewolf>();
 		GameObject nw = ((NavMeshWerewolf)werewolves[0]).gameObject;
 		float dist = int.MaxValue;
@@ -146,8 +147,6 @@ public class PatronController : MonoBehaviour {
 			}
 		}
 		return nw;
-		*/
-		return GameObject.Find("wolf");
 	}
 
 	bool gtg = false;
@@ -212,7 +211,7 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject nw = nearest_werewolf();
-		if (Vector3.Distance (nw.transform.position, transform.position) < 2) {
+		if (!Physics.Linecast(nw.transform.position, transform.position)) {
 			new_patron_state = PatronStates.fleeingWerewolf;
 		}
 
@@ -278,7 +277,7 @@ public class PatronController : MonoBehaviour {
 		if (ConversationTime <= 0) {
 			ResetTimers();
 			
-			ConvoText = Gibberish.StringFromPool("Assets/scripts/PatronGibberish");
+			ConvoText = new Gibberish ("Assets/scripts/PatronGibberish", Random.Range (2, 15)).FinalReturnGibberish;
 			KnownSelves.AddRange( ConversationTarget.GetComponent<PatronController>().KnownSelves );
 			TimeToNextTalk = Random.Range(500, 2000);
 		}
@@ -301,7 +300,7 @@ public class PatronController : MonoBehaviour {
 	void fleeWerewolf(){
 		GameObject nw = nearest_werewolf();
 
-		Vector3 flee_target = transform.position - 10*(transform.position - nw.transform.position);
+		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position ;
 		flee_target.y = transform.position.y;
 		GetComponent<NavMeshAgent>().SetDestination(flee_target);
 
@@ -352,8 +351,9 @@ public class PatronController : MonoBehaviour {
 				ui_pos.y -= 40.0f/d;
 				ui_pos.width = 250/d;
 
-				ui_pos.y -= 30.0f;
-				ui_pos.height += 30.0f;
+				ui_pos.y -= 25.0f;
+				ui_pos.height += 20.0f;
+				GUI.skin.textField.wordWrap = true;
 				GUI.DrawTexture(ui_pos, grey_texture);
 				GUI.TextField(ui_pos,ConvoText );
 			break;
