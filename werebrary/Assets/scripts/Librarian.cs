@@ -34,7 +34,6 @@ public class Librarian: MonoBehaviour
 
 	//random crap I need
 	GameObject target;
-//	Wander wanderObject;
 	Point centerPoint;
 
 	float wanderRandom = 0; //current position on projected circle
@@ -51,11 +50,9 @@ public class Librarian: MonoBehaviour
 	GameObject currentPlane;
 	public Librarian ()
 	{
-		//Debug.Log ("Makin a librarian");
 		currentState = 0;
 		nInputs = inputs.Length;
 		centerPoint = new Point (0.0f, 0.0f);
-		//Start ();
 	}
 
 	//different from constructor, might restart some Villagers. Otherwise call start along with new()
@@ -83,7 +80,7 @@ public class Librarian: MonoBehaviour
 				Min X: -32
 				Min Z: -26.79906*/
 		//setGameManager();
-		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberish", Random.Range (2, 5));
+		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberishGood", Random.Range (2, 5));
 		//Debug.Log ("Gibberish: " + gibContext.FinalReturnGibberish);
 	}
 
@@ -111,8 +108,6 @@ public class Librarian: MonoBehaviour
 		//steeringForce += steering.Seek (Vector3.zero);
 		//Debug.Log("Tethering! Vector: " + steeringForce.ToString());
 		//Debug.DrawLine(this.transform.position, this.transform.position + (steeringForce * 5), Color.blue);
-
-		ClampSteering ();
 
 		ClampSteering ();
 		
