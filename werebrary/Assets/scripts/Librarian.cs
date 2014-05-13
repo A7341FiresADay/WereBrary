@@ -23,8 +23,6 @@ public class Librarian: MonoBehaviour
 
 	private Gibberish gibContext;
 
-	private float gravity = 200.0f;
-
 	//for the state machine
 	string[] inputs = {"Wandering", "Waiting", "Helping", "Chasing"};
 	int nInputs;
@@ -45,9 +43,19 @@ public class Librarian: MonoBehaviour
 	bool howlingHeard = false;   							//is there a wolf attacking nearby?
 	bool requestInProgress = false;							//has someone asked you to help them find a book?
 	bool checkingSomething = false;							//are you checking something (waiting at the desk)
-
+	bool yellingAtWerewolf = false;							//did you catch a loud werewolf?
 	float maxTetherX, maxTetherZ, minTetherX, minTetherZ;
 	GameObject currentPlane;
+
+
+
+	float waitTime = 0;
+
+	private string currentText = "";
+
+	public string CurrentText { get { return currentText; } set { currentText = value; } }
+	public bool CheckingSomething { get { return checkingSomething; } set { checkingSomething = value; } }
+
 	public Librarian ()
 	{
 		currentState = 0;
@@ -58,8 +66,6 @@ public class Librarian: MonoBehaviour
 	//different from constructor, might restart some Villagers. Otherwise call start along with new()
 	public void Start()
 	{
-		//Debug.Log ("WHITE PEOPLE");
-//		gameManager = GameManager.Instance;
 		gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 		currentPlane = GameObject.Find ("Plane");
 
@@ -70,18 +76,9 @@ public class Librarian: MonoBehaviour
 		minTetherX = -32.0f;
 		maxTetherZ = 37.2f;
 		minTetherZ = -26.8f;
-		//currentPlane.collider.bounds.max.x
-		//plane's position is (0, -0.5, 5.2)
-		/*Debug.Log ("Plane: " + currentPlane.transform.position.ToString ());
-		Debug.Log ("\n Max X: " + currentPlane.collider.bounds.max.x + "\nMax Z: " + currentPlane.collider.bounds.max.z 
-		           + "\nMin X: " + currentPlane.collider.bounds.min.x + "\nMin Z: " + currentPlane.collider.bounds.min.z);
-		Max X: 32
-			Max Z: 37.20094
-				Min X: -32
-				Min Z: -26.79906*/
-		//setGameManager();
+
 		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberishGood", Random.Range (2, 5));
-		//Debug.Log ("Gibberish: " + gibContext.FinalReturnGibberish);
+		currentText = gibContext.FinalReturnGibberish;
 	}
 
 	//properties
@@ -95,19 +92,8 @@ public class Librarian: MonoBehaviour
 		steeringForce = Vector3.zero;
 
 		steeringForce += CalcSteeringForce().normalized;
-		//Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
-
-		//if (gameManager != null)
-		//	steeringForce += steering.Seek(new Vector3(0, 0, 0));
-		//Logic to determine which state we should be in and what to send to MakeTrans()
-		//Debug.Log ("Updating librarian");
 
 		steeringForce += StayInBounds(100.0f, Vector3.zero).normalized;
-		//Debug.Log("After stayinbounds called: " + steeringForce.ToString());
-
-		//steeringForce += steering.Seek (Vector3.zero);
-		//Debug.Log("Tethering! Vector: " + steeringForce.ToString());
-		//Debug.DrawLine(this.transform.position, this.transform.position + (steeringForce * 5), Color.blue);
 
 		ClampSteering ();
 		
@@ -116,13 +102,7 @@ public class Librarian: MonoBehaviour
 		moveDirection *= currentSpeed;
 		steeringForce.y = 0;
 		moveDirection += steeringForce;
-		
-		//add the stayInBounds here when we know what bounds we are staying in
-		
-		//currentSpeed = moveDirection.magnitude;
-		/*if (currentSpeed != moveDirection.magnitude) {
-			moveDirection = moveDirection.normalized * currentSpeed;
-		}*/
+
 		//orient transform
 		if (moveDirection != Vector3.zero)
 		{	
@@ -179,16 +159,11 @@ public class Librarian: MonoBehaviour
 		
 		if(nearEdge)
 		{
-			//Debug.Log("SteeringForce: " + steeringForce.ToString() + "gameManager: " + gameManager.ToString() + "\n");
 			tempSteeringForce += steering.Seek(Vector3.zero);
 			Debug.DrawLine(this.transform.position, this.transform.position + tempSteeringForce, Color.yellow);
-			//Debug.DrawLine(this.transform.position, gameManager.transform.position);
-			//Debug.Log("Nearing Edge blanket, seeking: " + gameManager.gameObject.transform.position.ToString());
 		}
 
 		tempSteeringForce.Normalize();
-		//Debug.Log("SteeringForce from stay in bounds: " + tempSteeringForce.magnitude.ToString());
-		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteeringForce * 5), Color.red);
 		return tempSteeringForce;
 	}
 
@@ -252,18 +227,26 @@ public class Librarian: MonoBehaviour
 		                                   (wanderRadius * Mathf.Cos(wanderAngle)), 0,
 		                                   (this.transform.forward.z * wanderDistance) +
 		                                   (wanderRadius * Mathf.Sin(wanderAngle)));
-
-		/*wanderRandom += Random.Range(-wanderRate, wanderRate); //move the point on the circle to a random point within the rate
-		float wanderAngle = wanderRandom * (Mathf.PI * 2); //get angle of point on circle
-		//Debug.DrawLine(
-		return new Vector3(this.transform.position.x + (this.transform.forward.x * wanderDistance) +
-		                   (wanderRandom * Mathf.Cos(wanderAngle)), 150,
-		                   this.transform.position.z + (this.transform.forward.z * wanderDistance) +
-		                   (wanderRandom * Mathf.Sin(wanderAngle))); //return vector of current position + forward vector * projected circle distance +*/
-		//position of current point on project circle
 	}
 
 	#endregion
+
+	#region drawing
+	void OnGUI()
+	{
+		var p = Camera.main.WorldToScreenPoint(transform.position);
+		var d = p.z/10;//Vector3.Distance(Camera.main.transform.position, transform.position) / 10;
+		Rect ui_pos = new Rect(p.x - 250/d/2, Screen.height - p.y - 40/d, 250/d, 40/d);
+		
+		currentText = gibContext.FinalReturnGibberish;
+		ui_pos.y -= 40.0f/d;
+		ui_pos.width = 250/d;
+
+		GUI.Box(ui_pos, currentText); //use box loction to draw text
+
+	}
+	#endregion
+
 
 	#region State Machine Methods
 
@@ -274,7 +257,7 @@ public class Librarian: MonoBehaviour
 			return "Chasing";
 		if (requestInProgress)
 			return "Helping";									//has someone asked you to help them find a book?
-		if (checkingSomething)
+		if (checkingSomething || yellingAtWerewolf)
 			return "Waiting";									//are you checking something (waiting at the desk)
 		return "Wandering";										//otherwise wander aimlessly
 	}
@@ -352,11 +335,35 @@ public class Librarian: MonoBehaviour
 		}
 		return;
 	}
-
+	//"Wandering", "Waiting", "Helping", "Chasing"
 	void s0Act(){}
-	void s1Act(){}
+	//waiting
+	void s1Act()
+	{
+		waitTime += Time.deltaTime;
+		if (waitTime > 10000.0f) 
+		{
+			waitTime = 0.0f;
+			howlingHeard = false;   							
+			requestInProgress = false;							
+			checkingSomething = false;
+			yellingAtWerewolf = false;
+		}
+	}
+	//helping(leading)
 	void s2Act(){}
-	void s3Act(){}
+	//chasing a werewolf
+	void s3Act()
+	{
+		howlingHeard = false;   							
+		requestInProgress = false;							
+		checkingSomething = false;	
+		if ((Vector3.Distance (this.transform.position, target.transform.position) < 10))
+		{
+			yellingAtWerewolf = true;
+		}
+
+	}
 
 	#endregion
 }
