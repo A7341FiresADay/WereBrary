@@ -95,7 +95,7 @@ public class Werewolf: MonoBehaviour
 	//UPDATE
 	public void FixedUpdate()
 	{
-		/*if (!seesLibrarian) {
+		if (!seesLibrarian) {
 			if(!Physics.Linecast(transform.position, gameManager.Librarian.transform.position)) {
 				target = gameManager.Librarian;
 				seesLibrarian = true;
@@ -103,7 +103,7 @@ public class Werewolf: MonoBehaviour
 		}
 		if (!seesLibrarian && !seesVillager) {
 			float d = float.MaxValue;
-			foreach (GameObject v in gameManager.villagers) {
+			foreach (GameObject v in GameObject.FindGameObjectsWithTag("Patron")) {
 				if(!Physics.Linecast(transform.position, v.transform.position)) {
 					float newD = Vector3.Distance(transform.position,v.transform.position);
 					if(newD < d) {
@@ -113,7 +113,7 @@ public class Werewolf: MonoBehaviour
 					}
 				}
 			}
-		}*/
+		}
 		steeringForce = Vector3.zero;
 		
 		steeringForce += CalcSteeringForce().normalized;
@@ -245,7 +245,7 @@ public class Werewolf: MonoBehaviour
 			tempSteering += steering.Flee(target);  //target should be the book in question, could randomly place them? Librarian is leader for the villager
 			break;
 		case "Chasing":
-			if(Physics.Linecast(transform.position, target.transform.position)) {
+			if(target == null || Physics.Linecast(transform.position, target.transform.position)) {
 				if(Vector3.Distance(transform.position, lastPos) < 1) {
 					target = null;
 					seesVillager = false;
