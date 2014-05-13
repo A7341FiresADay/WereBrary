@@ -93,11 +93,11 @@ public class Librarian: MonoBehaviour
 	public void setGameManager (GameObject g) {	gameManager = g.GetComponent<GameManager> (); }
 
 	//UPDATE
-	public void Update()
+	public void FixedUpdate()
 	{
 		steeringForce = Vector3.zero;
 
-		steeringForce += CalcSteeringForce()/5;
+		steeringForce += CalcSteeringForce().normalized;
 		//Debug.Log("Vector from steeringForce(wander only): " + steeringForce.ToString());
 
 		//if (gameManager != null)
@@ -105,7 +105,7 @@ public class Librarian: MonoBehaviour
 		//Logic to determine which state we should be in and what to send to MakeTrans()
 		//Debug.Log ("Updating librarian");
 
-		steeringForce += StayInBounds(100.0f, Vector3.zero)*50;
+		steeringForce += StayInBounds(100.0f, Vector3.zero).normalized;
 		//Debug.Log("After stayinbounds called: " + steeringForce.ToString());
 
 		//steeringForce += steering.Seek (Vector3.zero);
@@ -120,7 +120,7 @@ public class Librarian: MonoBehaviour
 		moveDirection.y = 0;
 		moveDirection *= currentSpeed;
 		steeringForce.y = 0;
-		moveDirection += steeringForce * Time.deltaTime;
+		moveDirection += steeringForce;
 		
 		//add the stayInBounds here when we know what bounds we are staying in
 		
@@ -135,10 +135,11 @@ public class Librarian: MonoBehaviour
 		}
 		
 		// Apply gravity
-		moveDirection.y -= gravity;
+		//moveDirection.y -= gravity;
 		
 		// the CharacterController moves us subject to physical constraints
-		characterController.Move (moveDirection * Time.deltaTime);
+		Debug.DrawLine (transform.position, transform.position + moveDirection);
+		characterController.Move (moveDirection / 100);
 
 	}
 
