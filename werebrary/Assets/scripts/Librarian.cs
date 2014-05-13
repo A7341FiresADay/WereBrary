@@ -83,7 +83,8 @@ public class Librarian: MonoBehaviour
 				Min X: -32
 				Min Z: -26.79906*/
 		//setGameManager();
-		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberish");
+		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberish", Random.Range (2, 5));
+		//Debug.Log ("Gibberish: " + gibContext.FinalReturnGibberish);
 	}
 
 	//properties

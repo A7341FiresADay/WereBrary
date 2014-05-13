@@ -7,9 +7,13 @@ using System.IO;
 public class Gibberish {
 	private string allWords;
 	const int MAX_SENT = 16;	// Maximum length of gibberish sentences
-	public Gibberish(string gibberishPool)
+	string finalReturnGibberish;
+
+	public string FinalReturnGibberish{ get { return finalReturnGibberish; } }
+	public Gibberish(string gibberishPool, int lengthOfGibberish)
 	{
 		allWords = gibberishPool;
+		finalReturnGibberish = string.Empty;
 		Markov markovChain = new Markov();		// Set up the Markov chain object
 		//Console.Write("Enter the .txt file to Gibberfy: ");
 		//string fileName = Console.ReadLine();
@@ -21,12 +25,15 @@ public class Gibberish {
 		string reply = Console.ReadLine();
 		int nLines = Convert.ToInt32(reply);
 		Console.WriteLine("");*/
-		
-		for (int i = 0; i < Random.Range (1, 4); i++)		// Generate 1-4 lines of gibberish
+		for (int i = 0; i < lengthOfGibberish; i++)		// Generate 1-4 lines of gibberish
 		{
 			// Generate a sentence of gibberish and print it to the console
 			string[] gibSent = markovChain.GenGibSent(MAX_SENT);
-			PrintSent(gibSent);
+			for (int j = 0; j < gibSent.Length; j++)
+			{
+				if (gibSent[j] != null)
+					finalReturnGibberish = finalReturnGibberish+ "..." + gibSent[j];
+			}
 		}
 	}
 	// Use this for initialization
@@ -74,23 +81,25 @@ public class Gibberish {
 		return toReturn;
 	}
 		
-	static void PrintSent(string[] sentWords)
+	static string PrintSent(string[] sentWords)
 	{
 		string firstChar = sentWords[0].Substring(0, 1).ToUpper();	// Cap first word
 		string capitalized = firstChar
 			+ sentWords[0].Substring(1, sentWords[0].Length-1);
 		sentWords[0] = capitalized;
+		string outputFinal = string.Empty;
 		
 		for (int i = 1; i < sentWords.Length; i++)	// Print rest of words
 		{
 			if (sentWords[i] == null)
 			{
-				return;
+				return null;
 			}
 			else
-				Debug.Log(" " + sentWords[i]);
+				string.Concat(outputFinal, ".....");
+				//Debug.Log(" " + sentWords[i]);
 		}
-		Debug.Log(".");						// Put period at the end
+		return outputFinal;
 	}
 }
 /* Markov Chain implements a level-one Markov chain of word bi-grams
@@ -159,7 +168,7 @@ public class Markov
 			
 			biGrams.FixBeginEndCount();
 			
-			Debug.Log("Loaded " + biGrams.NumVertices + " words");
+			//Debug.Log("Loaded " + biGrams.NumVertices + " words");
 		}
 		//catch (Exception ex)]
 		catch(UnityException ex)
@@ -241,7 +250,7 @@ public class Markov
 				input.Close();
 			}
 		}
-		Debug.Log(" and " + biGrams.NumSents() + " sentences.");
+		//Debug.Log(" and " + biGrams.NumSents() + " sentences.");
 		//biGrams.DumpMatrix();		// Only upper left of matrix for debugging purposes
 	}
 	
