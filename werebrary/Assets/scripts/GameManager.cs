@@ -28,10 +28,12 @@ public class GameManager : MonoBehaviour
 	public Object obstaclePrefab;
 	public Object followerPrefab;
 
-	public GameObject librarian;
+	public Librarian librarian;
 	public GameObject[] villagers;
 
-	public GameObject Librarian { get { return librarian; } }
+	TextMesh librarianText;
+
+	public Librarian currLibrarian { get { return librarian; } }
 	//values used by all villagers that are calculated by controller on update
 	private Vector3 flockDirection;
 	private Vector3 centroid;
@@ -68,12 +70,13 @@ public class GameManager : MonoBehaviour
 
 		obstacles = GameObject.FindGameObjectsWithTag ("Bookshelf");
 
-
+		//librarianText = librarian.GetComponentInChildren<TextMesh> ();
 
 	}
 	
 	public void Update( )
 	{
+		//librarianText.text = librarian.CurrentText;
 		//calcCentroid( );//find average position of each flocker 
 //		calcFlockDirection( );//find average "forward" for each flocker
 		//calcDistances( );

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -300,8 +300,11 @@ public class PatronController : MonoBehaviour {
 	void fleeWerewolf(){
 		GameObject nw = nearest_werewolf();
 
-		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position;
+<<<<<<< HEAD
 		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position ;
+=======
+		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position;
+>>>>>>> 371591a38fd324057c88e92447be24800c537414
 		flee_target.y = transform.position.y;
 		GetComponent<NavMeshAgent>().SetDestination(flee_target);
 
