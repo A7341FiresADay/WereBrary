@@ -44,17 +44,17 @@ public class Librarian: MonoBehaviour
 	bool requestInProgress = false;							//has someone asked you to help them find a book?
 	bool checkingSomething = false;							//are you checking something (waiting at the desk)
 	bool yellingAtWerewolf = false;							//did you catch a loud werewolf?
+	bool chasingWerewolf = false;
 	float maxTetherX, maxTetherZ, minTetherX, minTetherZ;
 	GameObject currentPlane;
-
-
-
+	
 	float waitTime = 0;
 
 	private string currentText = "";
 
 	public string CurrentText { get { return currentText; } set { currentText = value; } }
 	public bool CheckingSomething { get { return checkingSomething; } set { checkingSomething = value; } }
+	public GameObject Target { get { return target; } set { target = value; } }
 
 	public Librarian ()
 	{
@@ -79,6 +79,8 @@ public class Librarian: MonoBehaviour
 
 		gibContext = new Gibberish ("Assets/scripts/LibrarianGibberishGood", Random.Range (2, 5));
 		currentText = gibContext.FinalReturnGibberish;
+
+		target = null;
 	}
 
 	//properties
@@ -116,6 +118,12 @@ public class Librarian: MonoBehaviour
 		Debug.DrawLine (transform.position, transform.position + moveDirection);
 		characterController.Move (moveDirection / 100);
 
+	}
+
+	public void alertHowl(NavMeshWerewolf w)
+	{
+		target = w.gameObject;
+		chasingWerewolf = true;
 	}
 
 	#region movement Methods
@@ -195,13 +203,11 @@ public class Librarian: MonoBehaviour
 								tempSteering += steering.Seek (target);  //target HERE should be the werewolf in question
 								break;
 						default:
-								currentSpeed = steering.maxSpeed / 1.5f;
+								currentSpeed = steering.maxSpeed / 2;
 								tempSteering += wander ();
-								//Debug.Log("Wandering! Vector: " +  tempSteering.ToString());
 								Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.green);
 								break;
 						}
-			//Debug.Log("TempSteering Magnitude while wandering: " + tempSteering.magnitude);
 				
 		//		} 
 		/*else {
@@ -253,7 +259,7 @@ public class Librarian: MonoBehaviour
 	//returns the state necessary based on what is going on
 	private string chooseAction()
 	{
-		if (howlingHeard)										//is there a wolf attacking nearby?
+		if (howlingHeard || chasingWerewolf)									//is there a wolf attacking nearby?
 			return "Chasing";
 		if (requestInProgress)
 			return "Helping";									//has someone asked you to help them find a book?
@@ -361,6 +367,7 @@ public class Librarian: MonoBehaviour
 		if ((Vector3.Distance (this.transform.position, target.transform.position) < 10))
 		{
 			yellingAtWerewolf = true;
+			chasingWerewolf = true;
 		}
 
 	}
