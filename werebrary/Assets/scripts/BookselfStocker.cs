@@ -12,7 +12,7 @@ public class BookselfStocker : MonoBehaviour {
 
 
 		GameObject[] bookshelfObjects = GameObject.FindGameObjectsWithTag ("Bookshelf");
-		Debug.Log(bookshelfObjects.Length);
+
 		for(int i = 0; i < bookshelfObjects.Length; i++){
 
 

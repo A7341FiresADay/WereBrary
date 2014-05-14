@@ -21,6 +21,7 @@ public class LibraryEntrance : MonoBehaviour {
 			PatronController pc = patron.AddComponent<PatronController>();
 			pc.BookToFind = bookDisp.GetBook();
 
+
 		}
 
 	}

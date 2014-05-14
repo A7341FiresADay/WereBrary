@@ -18,7 +18,7 @@ public class PatronController : MonoBehaviour {
 	
 	
 	
-	
+	public bool knows_all = false;
 	public List<bookshelf> KnownSelves; // Shelves this patron knows the content of.
 	public bookshelf TargetShelf; //shelf to try next.
 	
@@ -63,8 +63,7 @@ public class PatronController : MonoBehaviour {
 
 		target_random_shelf();
 
-
-		ConvoText = new Gibberish ("Assets/scripts/PatronGibberish", Random.Range (2, 5)).FinalReturnGibberish;
+		ConvoText = random_talk();
 		
 		grey_texture = Resources.Load<Texture2D>("grey");
 		red_texture = Resources.Load<Texture2D>("red");
@@ -73,6 +72,11 @@ public class PatronController : MonoBehaviour {
 		darkyellow_texture = Resources.Load<Texture2D>("musturd_yellow");
 
 
+	}
+
+	string random_talk(){
+		
+		 return new Gibberish ("Assets/scripts/PatronGibberish", Random.Range (2, 15)).FinalReturnGibberish;
 	}
 
 	Vector3 random_shelf_position(){
@@ -133,6 +137,22 @@ public class PatronController : MonoBehaviour {
 		return np;
 	}
 
+	GameObject nearest_librarian() {
+		
+		Object[] librarians = FindObjectsOfType<Librarian>();
+		GameObject nl = ((Librarian)librarians[0]).gameObject;
+		float dist = int.MaxValue;
+		for (int i = 0; i < librarians.Length; i++) {
+			GameObject librarian = ((Librarian)librarians[i]).gameObject;
+			float temp_dist = Vector3.Distance(transform.position, librarian.transform.position);
+			if(dist > temp_dist && librarian != gameObject){
+				dist = temp_dist;
+				nl = librarian;
+			}
+		}
+		return nl;
+	}
+
 	GameObject nearest_werewolf() {
 
 		Object[] werewolves = FindObjectsOfType<NavMeshWerewolf>();
@@ -149,32 +169,10 @@ public class PatronController : MonoBehaviour {
 		return nw;
 	}
 
-	bool gtg = false;
-	bool known = false;
+
 	// Update is called once per frame
 	void Update () {
 
-		/*
-		if (gtg && !known)
-		{
-			known = true;
-			Debug.Log("it is known");
-			//TELL EACH PATRON WHERE THEIR BOOK IS SO THEY WILL GO FOR IT FIRST!
-			for (int j = 0; j < GameObject.Find("Shelves").transform.childCount; j++) 
-			{
-				GameObject shelf = GameObject.Find ("Shelves").transform.GetChild (j).gameObject;
-				bookshelf s = shelf.GetComponent<bookshelf> ();
-				if (s.book.GetComponent<Book> ().BookName == BookToFind) 
-				{
-					KnownSelves.Add (s);
-				}
-			}
-		}
-		gtg = true;
-		//FOR DEBUG ONLY
-		*/
-		
-		
 		TimeToNextTalk -= Random.Range(0, 100) * Time.deltaTime;
 
 
@@ -196,9 +194,16 @@ public class PatronController : MonoBehaviour {
 			}
 		}
 
+		GameObject nl = nearest_librarian ();
+		if (Vector3.Distance (nl.transform.position, transform.position) < 3 && !knows_all) {
+			new_patron_state = PatronStates.askingLibrarian;
+			ConversationTarget = nl;
+		}
+
+
 		if(CarriedBook != null){
-			Debug.Log("exists");
-			Debug.Log(CarriedBook.GetComponent<Book>().BookName);
+
+
 			if(CarriedBook.GetComponent<Book>().BookName == BookToFind){ //if you have the book, skedaddle
 				new_patron_state = PatronStates.leavingWithBook;
 			}
@@ -211,9 +216,10 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject nw = nearest_werewolf();
-		if (!Physics.Linecast(nw.transform.position, transform.position)) {
+		if (!Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < 7) {
 			new_patron_state = PatronStates.fleeingWerewolf;
 		}
+
 
 		PatronState = new_patron_state;
 
@@ -277,19 +283,47 @@ public class PatronController : MonoBehaviour {
 		if (ConversationTime <= 0) {
 			ResetTimers();
 			
-			ConvoText = new Gibberish ("Assets/scripts/PatronGibberish", Random.Range (2, 15)).FinalReturnGibberish;
+			ConvoText = random_talk();
 			KnownSelves.AddRange( ConversationTarget.GetComponent<PatronController>().KnownSelves );
 			TimeToNextTalk = Random.Range(500, 2000);
 		}
-}
+	}
 
 	void askLibrarian(){
 
-		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 2) {
-			ConversationTime -= Time.deltaTime;
+		GetComponent<NavMeshAgent> ().Stop ();
+		nearest_librarian().GetComponent<Librarian>().CheckingSomething = true;
+		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 3) {
+			ConversationTime -= 250 * Time.deltaTime;
 		}
+		if(Random.Range(0, 100) < 1){ConvoText = random_talk();}
+
+
 		if (ConversationTime <= 0) {
 			ResetTimers();
+
+			int[] others = new int[10];
+			int max = GameObject.Find("Shelves").transform.childCount;
+			for(int i = 0; i < others.Length; i++){
+				others[i] = (int)Random.Range(0, max);
+			}
+			for (int j = 0; j < max; j++) 
+			{
+				GameObject shelf = GameObject.Find ("Shelves").transform.GetChild (j).gameObject;
+				bookshelf s = shelf.GetComponent<bookshelf> ();
+
+
+				if(s.book.GetComponent<Book>().BookName == BookToFind){
+					KnownSelves.Add (s);
+				}
+				for(int i = 0; i < others.Length; i++){
+					if(others[i] == j && !KnownSelves.Contains(s)){
+						KnownSelves.Add (s);
+					}
+				}
+			}
+
+			knows_all = true;
 			//1- Take knowledge of desired book. 
 			//2- Take knowledge of any other book
 
@@ -301,7 +335,6 @@ public class PatronController : MonoBehaviour {
 		GameObject nw = nearest_werewolf();
 
 		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position;
-		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position ;
 		flee_target.y = transform.position.y;
 		GetComponent<NavMeshAgent>().SetDestination(flee_target);
 
@@ -362,6 +395,16 @@ public class PatronController : MonoBehaviour {
 				GUI.DrawTexture(ui_pos, grey_texture);
 				ui_pos.width =  ConversationTime/4/d;
 				GUI.DrawTexture(ui_pos, darkyellow_texture);
+
+			
+				ui_pos.y -= 40.0f/d;
+				ui_pos.width = 250/d;
+				
+				ui_pos.y -= 25.0f;
+				ui_pos.height += 20.0f;
+				GUI.skin.textField.wordWrap = true;
+				GUI.DrawTexture(ui_pos, grey_texture);
+				GUI.TextField(ui_pos,ConvoText );
 			break;
 			case(PatronStates.fleeingWerewolf):
 
