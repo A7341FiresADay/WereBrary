@@ -47,6 +47,8 @@ public class Librarian: MonoBehaviour
 	bool chasingWerewolf = false;
 	float maxTetherX, maxTetherZ, minTetherX, minTetherZ;
 	GameObject currentPlane;
+
+	public GameObject newPatron;
 	
 	float waitTime = 0;
 
@@ -95,6 +97,7 @@ public class Librarian: MonoBehaviour
 
 		steeringForce += CalcSteeringForce().normalized;
 
+
 		steeringForce += StayInBounds(100.0f, Vector3.zero).normalized;
 
 		ClampSteering ();
@@ -124,6 +127,13 @@ public class Librarian: MonoBehaviour
 	{
 		target = w.gameObject;
 		chasingWerewolf = true;
+		yellingAtWerewolf = true;
+	}
+
+	public void startWait()
+	{
+		checkingSomething = true;
+		waitTime = 0.0f;
 	}
 
 	#region movement Methods
@@ -190,7 +200,7 @@ public class Librarian: MonoBehaviour
 		Vector3 tempSteering = Vector3.zero;
 		Vector3 boundsSteering = StayInBounds (100.0f, Vector3.zero);
 		//if (boundsSteering == Vector3.zero) {
-						switch (currentAction = chooseAction ()) {
+		switch (currentAction = chooseAction ()) {
 						case "Waiting":
 								currentSpeed = 0;
 								break;
@@ -218,6 +228,7 @@ public class Librarian: MonoBehaviour
 			Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering * 5), Color.blue);
 		}*/
 		//Debug.Log("SteeringForce from calcsteeringforce before Normalization: " + steeringForce.magnitude.ToString());
+		CallAction ();
 		tempSteering.Normalize();
 		//Debug.DrawLine(this.transform.position, this.transform.position + (tempSteering /* 5*/), Color.red);
 		//Debug.Log("SteeringForce from calcsteeringforce Normalized: " + steeringForce.magnitude.ToString());
@@ -268,86 +279,41 @@ public class Librarian: MonoBehaviour
 		return "Wandering";										//otherwise wander aimlessly
 	}
 
-	// Handling the FSM, mostly taken from the StMachDemo
-	public void MakeTrans(int input)
-	{
-		int nextState = -1;			// Assume the worst (an error)
-		
-		switch (currentState)				// Get the next state with logic
-		{
-		case 0:						// Cascading if/elses
-			if (input == 0)
-				nextState = 1;
-			else if (input == 2)
-				nextState = 2;
-			else
-				nextState = currentState;
-			break;
-		case 1:
-			switch (input)			// Switch within a switch
-			{
-			case 1:
-				nextState = 0;
-				break;
-			case 2:
-				nextState = 2;
-				break;
-			default:
-				nextState = currentState;
-				break;
-			}
-			break;
-		case 2:						// The old nested ternary trick
-			nextState = (input == 3) ? 0 : (input == 4) ? 3 : currentState;
-			break;
-		case 3:
-			if (input == 5)			// Simple if/else actually okay for this one
-				nextState = 0;
-			else
-				nextState = currentState;
-			break;
-		}
-		
-		if (nextState >= 0)			// Make sure the next state is legal
-			currentState = nextState;		// and update currState if it is
-		else
-		{
-			Debug.Log ("Bad state in FSMHardCode");
-		}
-		
-		Debug.Log ("Input"+input + ": " + inputs[input]);	// Display input
-	}
-	
 	// Driver method for calling action routines copied from Ghost class
 	public void CallAction ()
 	{
-		switch (currentState)
+		//Debug.Log ("calling action");
+		switch (currentAction)
 		{
-		case 0:
+		case "Wandering":
 			s0Act ();
 			break;
-		case 1:
+		case "Waiting":
 			s1Act ();
 			break;
-		case 2:
+		case "Helping":
 			s2Act ();
 			break;
-		case 3:
+		case "Chasing":
 			s3Act ();
 			break;
 		default:
-			Debug.Log ("Oops!  Bad state!");
+			Debug.Log ("Bad state");
 			break;
 		}
 		return;
 	}
 	//"Wandering", "Waiting", "Helping", "Chasing"
-	void s0Act(){}
+	void s0Act()
+	{
+		Debug.Log ("wandering");
+	}
 	//waiting
 	void s1Act()
 	{
-		waitTime += Time.deltaTime;
-		if (waitTime > 10000.0f) 
+		++waitTime;// += Time.deltaTime;
+		Debug.Log ("Wait Time: " + waitTime);
+		if (waitTime > 600.0f) 
 		{
 			waitTime = 0.0f;
 			howlingHeard = false;   							
@@ -357,19 +323,24 @@ public class Librarian: MonoBehaviour
 		}
 	}
 	//helping(leading)
-	void s2Act(){}
+	void s2Act()
+	{
+		Debug.Log ("helping");
+	}
 	//chasing a werewolf
 	void s3Act()
 	{
+		//Debug.Log ("chasing");
 		howlingHeard = false;   							
 		requestInProgress = false;							
 		checkingSomething = false;	
-		if ((Vector3.Distance (this.transform.position, target.transform.position) < 10))
+		if ((Vector3.Distance (this.transform.position, target.transform.position) < 1))
 		{
-			yellingAtWerewolf = true;
-			chasingWerewolf = true;
+			yellingAtWerewolf = false;
+			chasingWerewolf = false;
+			Instantiate(newPatron, target.transform.position, target.transform.rotation);
+			Destroy(target);
 		}
-
 	}
 
 	#endregion

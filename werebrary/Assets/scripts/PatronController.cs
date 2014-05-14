@@ -156,17 +156,24 @@ public class PatronController : MonoBehaviour {
 	GameObject nearest_werewolf() {
 
 		Object[] werewolves = FindObjectsOfType<NavMeshWerewolf>();
-		GameObject nw = ((NavMeshWerewolf)werewolves[0]).gameObject;
-		float dist = int.MaxValue;
-		for (int i = 0; i < werewolves.Length; i++) {
-			GameObject werewolf = ((NavMeshWerewolf)werewolves[i]).gameObject;
-			float temp_dist = Vector3.Distance(transform.position, werewolf.transform.position);
-			if(dist > temp_dist && werewolf != gameObject){
-				dist = temp_dist;
-				nw = werewolf;
+		try
+		{
+			GameObject nw = ((NavMeshWerewolf)werewolves[0]).gameObject;
+			float dist = int.MaxValue;
+			for (int i = 0; i < werewolves.Length; i++) {
+				GameObject werewolf = ((NavMeshWerewolf)werewolves[i]).gameObject;
+				float temp_dist = Vector3.Distance(transform.position, werewolf.transform.position);
+				if(dist > temp_dist && werewolf != gameObject){
+					dist = temp_dist;
+					nw = werewolf;
+				}
 			}
+			return nw;
 		}
-		return nw;
+		catch (UnityException e)
+		{
+			return null;
+		}
 	}
 
 
@@ -216,7 +223,7 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject nw = nearest_werewolf();
-		if (!Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < 7) {
+		if (nw != null && !Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < 7) {
 			new_patron_state = PatronStates.fleeingWerewolf;
 		}
 
@@ -292,7 +299,8 @@ public class PatronController : MonoBehaviour {
 	void askLibrarian(){
 
 		GetComponent<NavMeshAgent> ().Stop ();
-		nearest_librarian().GetComponent<Librarian>().CheckingSomething = true;
+		if (!nearest_librarian().GetComponent<Librarian>().CheckingSomething)
+			nearest_librarian ().GetComponent<Librarian> ().startWait (); /*CheckingSomething = true;*/
 		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 3) {
 			ConversationTime -= 250 * Time.deltaTime;
 		}
@@ -334,10 +342,12 @@ public class PatronController : MonoBehaviour {
 	void fleeWerewolf(){
 		GameObject nw = nearest_werewolf();
 
-		Vector3 flee_target = 10*(transform.position - nw.transform.position) - transform.position;
-		flee_target.y = transform.position.y;
-		GetComponent<NavMeshAgent>().SetDestination(flee_target);
-
+		if (nw != null) 
+		{
+			Vector3 flee_target = 10 * (transform.position - nw.transform.position) - transform.position;
+			flee_target.y = transform.position.y;
+			GetComponent<NavMeshAgent> ().SetDestination (flee_target);
+		}
 
 
 	}
