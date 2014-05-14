@@ -140,6 +140,8 @@ public class PatronController : MonoBehaviour {
 	GameObject nearest_librarian() {
 		
 		Object[] librarians = FindObjectsOfType<Librarian>();
+		if(librarians.Length <= 0){return gameObject;}
+
 		GameObject nl = ((Librarian)librarians[0]).gameObject;
 		float dist = int.MaxValue;
 		for (int i = 0; i < librarians.Length; i++) {
@@ -156,24 +158,19 @@ public class PatronController : MonoBehaviour {
 	GameObject nearest_werewolf() {
 
 		Object[] werewolves = FindObjectsOfType<NavMeshWerewolf>();
-		try
-		{
-			GameObject nw = ((NavMeshWerewolf)werewolves[0]).gameObject;
-			float dist = int.MaxValue;
-			for (int i = 0; i < werewolves.Length; i++) {
-				GameObject werewolf = ((NavMeshWerewolf)werewolves[i]).gameObject;
-				float temp_dist = Vector3.Distance(transform.position, werewolf.transform.position);
-				if(dist > temp_dist && werewolf != gameObject){
-					dist = temp_dist;
-					nw = werewolf;
-				}
+		if(werewolves.Length <= 0){return gameObject;}
+
+		GameObject nw = ((NavMeshWerewolf)werewolves[0]).gameObject;
+		float dist = int.MaxValue;
+		for (int i = 0; i < werewolves.Length; i++) {
+			GameObject werewolf = ((NavMeshWerewolf)werewolves[i]).gameObject;
+			float temp_dist = Vector3.Distance(transform.position, werewolf.transform.position);
+			if(dist > temp_dist && werewolf != gameObject){
+				dist = temp_dist;
+				nw = werewolf;
 			}
-			return nw;
 		}
-		catch (UnityException e)
-		{
-			return null;
-		}
+		return nw;
 	}
 
 
@@ -202,7 +199,7 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject nl = nearest_librarian ();
-		if (Vector3.Distance (nl.transform.position, transform.position) < 3 && !knows_all) {
+		if (nl != gameObject && Vector3.Distance (nl.transform.position, transform.position) < 3 && !knows_all) {
 			new_patron_state = PatronStates.askingLibrarian;
 			ConversationTarget = nl;
 		}
@@ -223,7 +220,7 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject nw = nearest_werewolf();
-		if (nw != null && !Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < 7) {
+		if (nw != gameObject && !Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < 7) {
 			new_patron_state = PatronStates.fleeingWerewolf;
 		}
 
