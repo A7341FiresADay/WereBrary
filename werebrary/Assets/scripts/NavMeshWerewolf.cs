@@ -176,7 +176,7 @@ public class NavMeshWerewolf : MonoBehaviour {
 		GameObject fleedLibrarian = null;
 		foreach(GameObject l in GameObject.FindGameObjectsWithTag("Librarian")) {
 			if(!Physics.Linecast(transform.position, l.transform.position)) {
-				if(Vector3.Distance(transform.position,l.transform.position) < 10) {
+				if(Vector3.Distance(transform.position,l.transform.position) < 25) {
 					fleedLibrarian = l;
 				}
 			}
