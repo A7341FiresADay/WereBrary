@@ -11,6 +11,8 @@ public class NavMeshWerewolf : MonoBehaviour {
 	public GameObject chasedPatron;
 	public float SearchTime; // Time until shelf is searched
 	public float TakeTime; //Time unti book has been taken from shelf
+	bool isChasing = false;
+
 	public void ResetTimers(){
 		SearchTime = 1000;
 		TakeTime = 1000;
@@ -174,14 +176,23 @@ public class NavMeshWerewolf : MonoBehaviour {
 		GameObject fleedLibrarian = null;
 		foreach(GameObject l in GameObject.FindGameObjectsWithTag("Librarian")) {
 			if(!Physics.Linecast(transform.position, l.transform.position)) {
-				fleedLibrarian = l;
+				if(Vector3.Distance(transform.position,l.transform.position) < 10) {
+					fleedLibrarian = l;
+				}
 			}
 		}
 		if (fleedLibrarian != null) {
+			isChasing = false;
 			Vector3 flee_target = (transform.position - fleedLibrarian.transform.position) - transform.position;
 			target_obj(flee_target);
 				}
 		else {
+			if(!isChasing) {
+				foreach(GameObject l in GameObject.FindGameObjectsWithTag("Librarian")) {
+					l.GetComponent<Librarian>().alertHowl(this);
+				}
+				isChasing = true;
+			}
 			target_obj(nearest_patron().transform.position);
 				}
 		if (Vector3.Distance (transform.position, nearest_patron ().transform.position) < 1) {
