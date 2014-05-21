@@ -312,7 +312,7 @@ public class Librarian: MonoBehaviour
 	void s1Act()
 	{
 		++waitTime;// += Time.deltaTime;
-		Debug.Log ("Wait Time: " + waitTime);
+		//Debug.Log ("Wait Time: " + waitTime);
 		if (waitTime > 600.0f) 
 		{
 			waitTime = 0.0f;

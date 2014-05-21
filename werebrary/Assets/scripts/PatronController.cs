@@ -1,8 +1,74 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+public struct genetic_object
+{
+	public bool was_caught;
+	public float search_speed;
+	public float conversation_speed;
+	public float take_speed;
+	public Vector2 next_talk_timespan;
+	public float werewolf_flee_range;
+	public float patron_talk_range;
+	public float librarian_talk_range;
+}
+
 public class PatronController : MonoBehaviour {
+
+	public bool got_book;
+
+	/* Genetic Variables */
+	public bool was_caught;
+	public float search_speed;
+	public float conversation_speed;
+	public float take_speed;
+	public Vector2 next_talk_timespan;
+	public float werewolf_flee_range;
+	public float patron_talk_range;
+	public float librarian_talk_range;
+
+	private bool overrode_default_genetics = false;
+
+
+	public void seed_genetics(bool _was_caught, 
+	                          float _search_speed,
+	                          float _conversation_speed,
+	                          float _take_speed,
+	                          Vector2 _next_talk_timespan,
+	                          float _werewolf_flee_range, 
+	                          float _patron_talk_range,
+	                          float _librarian_talk_range)
+	{
+		was_caught = _was_caught;
+		search_speed = _search_speed;
+		conversation_speed = _conversation_speed;
+		take_speed = _take_speed;
+		next_talk_timespan = _next_talk_timespan;
+		werewolf_flee_range = _werewolf_flee_range;
+		patron_talk_range = _patron_talk_range;
+		librarian_talk_range = _librarian_talk_range;
+
+		overrode_default_genetics = true;
+	}
+
+	public genetic_object get_genetics()
+	{
+		genetic_object ret = new genetic_object();
+
+		ret.was_caught = was_caught;
+		ret.search_speed = search_speed;
+		ret.conversation_speed = conversation_speed;
+		ret.take_speed = take_speed;
+		ret.next_talk_timespan = next_talk_timespan;
+		ret.werewolf_flee_range = werewolf_flee_range;
+		ret.patron_talk_range = patron_talk_range;
+		ret.librarian_talk_range = librarian_talk_range;
+
+		return ret;
+	}
+
+
 
 	public string BookToFind; // title of the desired book.
 	public GameObject CarriedBook; //current book character is carrying.
@@ -10,11 +76,12 @@ public class PatronController : MonoBehaviour {
 	public float SearchTime; // Time until shelf is searched
 	public float TakeTime; //Time unti book has been taken from shelf
 	public void ResetTimers(){
-		SearchTime = 1000;
-		TakeTime = 1000;
-		ConversationTime = 1000;
+		SearchTime = search_speed;
+		TakeTime = take_speed;
+		ConversationTime = conversation_speed;
 	}
-	
+
+
 	
 	
 	
@@ -55,8 +122,27 @@ public class PatronController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		if(got_book != true){
+			got_book = false;
+		}
+
+
+		if(!overrode_default_genetics)
+		{
+			
+			seed_genetics(true, 
+		                  1000,
+		                  1000,
+		                  1000,
+		                  new Vector2(500, 2000),
+		                  7, 
+		                  4,
+		                  3);
+
+		}
+
 		//BookToFind = GameObject.Find ("Shelves").GetComponent<BookselfStocker> ().AssignSeekerBook ();
-		TimeToNextTalk = Random.Range(500, 2000);
+		TimeToNextTalk = Random.Range(next_talk_timespan.x, next_talk_timespan.y);
 		PatronState = PatronStates.wandering;
 
 		KnownSelves = new List<bookshelf> ();
@@ -177,6 +263,7 @@ public class PatronController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
+
 		TimeToNextTalk -= Random.Range(0, 100) * Time.deltaTime;
 
 
@@ -199,7 +286,7 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject nl = nearest_librarian ();
-		if (nl != gameObject && Vector3.Distance (nl.transform.position, transform.position) < 3 && !knows_all) {
+		if (nl != gameObject && Vector3.Distance (nl.transform.position, transform.position) < librarian_talk_range && !knows_all) {
 			new_patron_state = PatronStates.askingLibrarian;
 			ConversationTarget = nl;
 		}
@@ -214,16 +301,15 @@ public class PatronController : MonoBehaviour {
 		}
 
 		GameObject np = nearest_patron ();
-		if (Vector3.Distance (np.transform.position, transform.position) < 4 && TimeToNextTalk <= 0 && np != gameObject && CarriedBook == null) {
+		if (Vector3.Distance (np.transform.position, transform.position) < patron_talk_range && TimeToNextTalk <= 0 && np != gameObject && CarriedBook == null) {
 			new_patron_state = PatronStates.askingPatron;
 			ConversationTarget = np;
 		}
 
 		GameObject nw = nearest_werewolf();
-		if (nw != gameObject && !Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < 7) {
+		if (nw != gameObject && !Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < werewolf_flee_range) {
 			new_patron_state = PatronStates.fleeingWerewolf;
 		}
-
 
 		PatronState = new_patron_state;
 
@@ -271,7 +357,10 @@ public class PatronController : MonoBehaviour {
 
 
 		}
-		if (TakeTime <= 0) {
+		got_book = true;
+		if (TakeTime <= 50) {
+			got_book = true;
+
 			CarriedBook = TargetShelf.book;
 			TargetShelf.book = null;
 		}
@@ -280,7 +369,7 @@ public class PatronController : MonoBehaviour {
 
 	void askPatron(){
 		GetComponent<NavMeshAgent> ().Stop ();
-		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 4) {
+		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < patron_talk_range) {
 			ConversationTime -= Time.deltaTime * 200;
 			// Debug.Log( Gibberish.StringFromPool("Assets/scripts/PatronGibberish") ); <-- gibberish
 		}
@@ -289,7 +378,7 @@ public class PatronController : MonoBehaviour {
 			
 			ConvoText = random_talk();
 			KnownSelves.AddRange( ConversationTarget.GetComponent<PatronController>().KnownSelves );
-			TimeToNextTalk = Random.Range(500, 2000);
+			TimeToNextTalk = Random.Range(next_talk_timespan.x, next_talk_timespan.y);
 		}
 	}
 
@@ -298,7 +387,7 @@ public class PatronController : MonoBehaviour {
 		GetComponent<NavMeshAgent> ().Stop ();
 		if (!nearest_librarian().GetComponent<Librarian>().CheckingSomething)
 			nearest_librarian ().GetComponent<Librarian> ().startWait (); /*CheckingSomething = true;*/
-		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < 3) {
+		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < librarian_talk_range) {
 			ConversationTime -= 250 * Time.deltaTime;
 		}
 		if(Random.Range(0, 100) < 1){ConvoText = random_talk();}
@@ -317,6 +406,8 @@ public class PatronController : MonoBehaviour {
 				GameObject shelf = GameObject.Find ("Shelves").transform.GetChild (j).gameObject;
 				bookshelf s = shelf.GetComponent<bookshelf> ();
 
+				//If some books are already taken, the shelf will be null. You cannot learn about it.
+				if(s.book == null){ continue; }
 
 				if(s.book.GetComponent<Book>().BookName == BookToFind){
 					KnownSelves.Add (s);

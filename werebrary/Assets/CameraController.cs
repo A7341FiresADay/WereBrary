@@ -16,6 +16,12 @@ public class CameraController : MonoBehaviour {
 	private Vector3 target_pos = new Vector3 (0, 0, 0);
 	GameObject target_obj;
 	void Update () {
+		if(target_obj == null)
+		{
+			target_obj = Random_patron();
+			target_pos = target_obj.transform.position;
+		}
+
 		time_since_retarget += Time.deltaTime;
 		if (time_since_retarget > retarget_in ) {
 			time_since_retarget = 0.0f;
