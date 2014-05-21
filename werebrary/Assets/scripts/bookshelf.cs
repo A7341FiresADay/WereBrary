@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//Allows a gameobject to hold a book.
 public class bookshelf : MonoBehaviour {
 
 	public GameObject book;

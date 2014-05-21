@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+//Represents a "Book".
+//Probably should have just used a string
 public class Book : MonoBehaviour {
 
 	public string BookName;
@@ -13,6 +15,7 @@ public class Book : MonoBehaviour {
 
 	void Update(){
 		GetComponent<TextMesh>().text = BookName;
+		//set the last parameter to a bigger alpha to show book names over shelves.
 		GetComponent<TextMesh>().color = new Color(1, 1, 1, 0/100);
 
 		transform.LookAt(GameObject.Find("Main Camera").transform);

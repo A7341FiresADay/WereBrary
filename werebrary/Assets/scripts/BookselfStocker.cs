@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//Holds a book.
+//Once, held multiple books. Now, holds a single book. Could almost be a string.
 public class BookselfStocker : MonoBehaviour {
 
 	public GameObject Book;
@@ -19,6 +21,7 @@ public class BookselfStocker : MonoBehaviour {
 			GameObject currentShelfObject = bookshelfObjects[i];
 			bookshelf currentShelf = currentShelfObject.AddComponent<bookshelf>();
 
+			//position book over shelf?
 			currentShelf.book = (GameObject)Instantiate(Book, Vector3.zero, Quaternion.identity);
 			currentShelf.book.transform.parent = currentShelfObject.transform;
 			currentShelf.book.transform.position = currentShelfObject.transform.position;

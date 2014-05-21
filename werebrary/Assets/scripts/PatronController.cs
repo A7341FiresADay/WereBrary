@@ -2,6 +2,13 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
+/*
+ * This is the hell class.
+ */
+
+
+//This holds all values that are used for the gentic algorithm.
 public struct genetic_object
 {
 	public bool was_caught;
@@ -14,12 +21,13 @@ public struct genetic_object
 	public float librarian_talk_range;
 }
 
+//This is in charge of patron behavior trees, etc
 public class PatronController : MonoBehaviour {
 
 	public bool got_book;
 
 	/* Genetic Variables */
-	public bool was_caught;
+	public bool was_caught; //if the patron was caught, this will be true when they return, making them invalid gentic matrial.
 	public float search_speed;
 	public float conversation_speed;
 	public float take_speed;
@@ -28,9 +36,10 @@ public class PatronController : MonoBehaviour {
 	public float patron_talk_range;
 	public float librarian_talk_range;
 
+	//If the librarian saves someone, they get generic genetics, and will not qualify for the gene pool.
 	private bool overrode_default_genetics = false;
 
-
+	//used to populate the genetic values.
 	public void seed_genetics(bool _was_caught, 
 	                          float _search_speed,
 	                          float _conversation_speed,
@@ -52,6 +61,7 @@ public class PatronController : MonoBehaviour {
 		overrode_default_genetics = true;
 	}
 
+	//passes out the genetics (used when the patron is finished to add them to pool.
 	public genetic_object get_genetics()
 	{
 		genetic_object ret = new genetic_object();
@@ -75,6 +85,8 @@ public class PatronController : MonoBehaviour {
 	
 	public float SearchTime; // Time until shelf is searched
 	public float TakeTime; //Time unti book has been taken from shelf
+
+	//resets the timers on conversations/takes/etc.
 	public void ResetTimers(){
 		SearchTime = search_speed;
 		TakeTime = take_speed;
@@ -84,7 +96,7 @@ public class PatronController : MonoBehaviour {
 
 	
 	
-	
+	//toogled to prevent partron from talking to librarian forever
 	public bool knows_all = false;
 	public List<bookshelf> KnownSelves; // Shelves this patron knows the content of.
 	public bookshelf TargetShelf; //shelf to try next.
@@ -95,7 +107,7 @@ public class PatronController : MonoBehaviour {
 	public GameObject ConversationTarget; //Fellow to talk to.
 
 
-
+	//What the patron is currently doing
 	PatronStates patronState;
 	public PatronStates PatronState{
 		get{
@@ -109,6 +121,8 @@ public class PatronController : MonoBehaviour {
 		}
 
 	}
+
+	//what the patron could be doing
 	public enum PatronStates{
 		wandering,
 		searchingSelf,
@@ -122,11 +136,12 @@ public class PatronController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		//weird, weird hotfix. Probably redundant. Magic.
 		if(got_book != true){
 			got_book = false;
 		}
 
-
+		//Gives default genetics if none were provided.
 		if(!overrode_default_genetics)
 		{
 			
@@ -145,12 +160,16 @@ public class PatronController : MonoBehaviour {
 		TimeToNextTalk = Random.Range(next_talk_timespan.x, next_talk_timespan.y);
 		PatronState = PatronStates.wandering;
 
+		//init known bookshelves (none)
 		KnownSelves = new List<bookshelf> ();
 
+		//choose a shelf to target
 		target_random_shelf();
 
+		//choose inital conversation text from the markov chain.
 		ConvoText = random_talk();
-		
+
+		//load the colored bars for the UI.
 		grey_texture = Resources.Load<Texture2D>("grey");
 		red_texture = Resources.Load<Texture2D>("red");
 		blue_texture = Resources.Load<Texture2D>("blue");
@@ -160,25 +179,30 @@ public class PatronController : MonoBehaviour {
 
 	}
 
+	//generates a little bit of gibberish
 	string random_talk(){
 		
 		 return new Gibberish ("Assets/scripts/PatronGibberish", Random.Range (2, 15)).FinalReturnGibberish;
 	}
 
+	//returns locaiton of a random bookshelf.
 	Vector3 random_shelf_position(){
 		TargetShelf = GameObject.FindGameObjectsWithTag ("Bookshelf")[(int)(Random.value * GameObject.FindGameObjectsWithTag ("Bookshelf").Length)].GetComponent<bookshelf>();
 		return TargetShelf.gameObject.transform.position;
 	}
 
+	//sets the target location to a random bookshelf.
 	void target_random_shelf(){
 		GetComponent<NavMeshAgent>().SetDestination( random_shelf_position() );
 	}
 
+	//sets desitination to given Vector3.
 	void target_obj(Vector3 target){
-		
 		GetComponent<NavMeshAgent>().SetDestination(target);
 	}
 
+	//Checks if target shelf location is known.
+	//tsk caches the check so I'm not looking it up every update.
 	bool tsk = false;
 	bool target_shelf_known(){
 		if (tsk) 
@@ -196,6 +220,9 @@ public class PatronController : MonoBehaviour {
 
 		return false;
 	}
+
+	//returns the target bookshelf, or a random shelf if it is unknown.
+	//use target_shelf_known to check if it is a random shelf or the correct shelf.
 	Vector3 target_book_shelf(){
 		foreach(bookshelf shelf in KnownSelves){
 			if(shelf.book != null){
@@ -208,6 +235,7 @@ public class PatronController : MonoBehaviour {
 		return random_shelf_position();
 	}
 
+	//returns the nearest partron
 	GameObject nearest_patron() {
 		Object[] patrons = FindObjectsOfType<PatronController>();
 		GameObject np = ((PatronController)patrons[0]).gameObject;
@@ -223,6 +251,7 @@ public class PatronController : MonoBehaviour {
 		return np;
 	}
 
+	//returns the nearest librarain
 	GameObject nearest_librarian() {
 		
 		Object[] librarians = FindObjectsOfType<Librarian>();
@@ -241,6 +270,7 @@ public class PatronController : MonoBehaviour {
 		return nl;
 	}
 
+	//returns nearest werewolf
 	GameObject nearest_werewolf() {
 
 		Object[] werewolves = FindObjectsOfType<NavMeshWerewolf>();
@@ -263,10 +293,10 @@ public class PatronController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-
+		//countdown until you can have another conversation. Some random jigger on the countdown.
 		TimeToNextTalk -= Random.Range(0, 100) * Time.deltaTime;
 
-
+		//assume you're just wandering
 		var new_patron_state = PatronStates.wandering;
 		if(target_shelf_known () ){ //if you know where to go, go there
 			target_obj ( target_book_shelf() );
@@ -285,37 +315,41 @@ public class PatronController : MonoBehaviour {
 			}
 		}
 
+		//if there is a librarian nearby, and you're ready to talk to them, do so
 		GameObject nl = nearest_librarian ();
 		if (nl != gameObject && Vector3.Distance (nl.transform.position, transform.position) < librarian_talk_range && !knows_all) {
 			new_patron_state = PatronStates.askingLibrarian;
 			ConversationTarget = nl;
 		}
 
-
+		//If you've got the book...
 		if(CarriedBook != null){
 
 
-			if(CarriedBook.GetComponent<Book>().BookName == BookToFind){ //if you have the book, skedaddle
+			if(CarriedBook.GetComponent<Book>().BookName == BookToFind){ // skedaddle!
 				new_patron_state = PatronStates.leavingWithBook;
 			}
 		}
 
+		//If you're ready and able to share your knowledge with another patron, have that talk.
 		GameObject np = nearest_patron ();
 		if (Vector3.Distance (np.transform.position, transform.position) < patron_talk_range && TimeToNextTalk <= 0 && np != gameObject && CarriedBook == null) {
 			new_patron_state = PatronStates.askingPatron;
 			ConversationTarget = np;
 		}
 
+		//finally, if you ever see a werewolf, drop everything and RUN!
 		GameObject nw = nearest_werewolf();
 		if (nw != gameObject && !Physics.Linecast(nw.transform.position, transform.position) && Vector3.Distance (nw.transform.position, transform.position) < werewolf_flee_range) {
 			new_patron_state = PatronStates.fleeingWerewolf;
 		}
-
+	
+		//Update your state.
 		PatronState = new_patron_state;
 
 
 
-
+		//do the behavior for the chosen state
 		switch (PatronState) 
 		{
 			case(PatronStates.wandering):		wander(); 		 break; //<- do
@@ -330,7 +364,7 @@ public class PatronController : MonoBehaviour {
 
 	}
 
-
+	//go somewhere random
 	void wander(){
 		GetComponent<NavMeshAgent> ().Resume ();
 		transform.position = GetComponent<NavMeshAgent>().nextPosition;
@@ -338,7 +372,7 @@ public class PatronController : MonoBehaviour {
 		//GameObject.FindGameObjectsWithTag ("Bookshelf");
 	}
 
-
+	//countdown to knowing the name of a book
 	void searchSelf(){
 		GetComponent<NavMeshAgent> ().Stop ();
 		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 2) {
@@ -350,6 +384,7 @@ public class PatronController : MonoBehaviour {
 
 	}
 
+	//countdown to taking a book
 	void takeBook(){
 		GetComponent<NavMeshAgent> ().Stop ();
 		if (Vector3.Distance (transform.position, TargetShelf.transform.position) < 2) {
@@ -366,7 +401,7 @@ public class PatronController : MonoBehaviour {
 		}
 	}
 
-
+	//Coundown to exchange knowledge.
 	void askPatron(){
 		GetComponent<NavMeshAgent> ().Stop ();
 		if (Vector3.Distance (transform.position, ConversationTarget.transform.position) < patron_talk_range) {
@@ -382,6 +417,7 @@ public class PatronController : MonoBehaviour {
 		}
 	}
 
+	//coundown to ask librairan for books
 	void askLibrarian(){
 
 		GetComponent<NavMeshAgent> ().Stop ();
@@ -396,6 +432,7 @@ public class PatronController : MonoBehaviour {
 		if (ConversationTime <= 0) {
 			ResetTimers();
 
+			//make sure to get knowledge of 10 random book, plus your desired book.
 			int[] others = new int[10];
 			int max = GameObject.Find("Shelves").transform.childCount;
 			for(int i = 0; i < others.Length; i++){
@@ -409,9 +446,11 @@ public class PatronController : MonoBehaviour {
 				//If some books are already taken, the shelf will be null. You cannot learn about it.
 				if(s.book == null){ continue; }
 
+				//if it's your shelf, take knowledge
 				if(s.book.GetComponent<Book>().BookName == BookToFind){
 					KnownSelves.Add (s);
 				}
+				//if it's one of the other 10 random shelves, take knowledge
 				for(int i = 0; i < others.Length; i++){
 					if(others[i] == j && !KnownSelves.Contains(s)){
 						KnownSelves.Add (s);
@@ -427,6 +466,7 @@ public class PatronController : MonoBehaviour {
 
 	}
 
+	//move away from werewolf
 	void fleeWerewolf(){
 		GameObject nw = nearest_werewolf();
 
@@ -440,6 +480,7 @@ public class PatronController : MonoBehaviour {
 
 	}
 
+	//move to exit/enternace
 	void leaveWithBook(){
 		
 		GetComponent<NavMeshAgent> ().Resume ();
@@ -447,16 +488,20 @@ public class PatronController : MonoBehaviour {
 		transform.position = GetComponent<NavMeshAgent>().nextPosition;
 	}
 
+	//textures for bars over heads
 	public Texture grey_texture;
 	public Texture red_texture;
 	public Texture blue_texture;
 	public Texture yellow_texture;
 	public Texture darkyellow_texture;
 	void OnGUI(){
+
+		//get a rectange that is positioned and scaled to look like it is in the 3D environment and not hovering over on the UI layer
 		var p = Camera.main.WorldToScreenPoint(transform.position);
-		var d = p.z/10;//Vector3.Distance(Camera.main.transform.position, transform.position) / 10;
+		var d = p.z/10;//shrink the width/height based on distance.
 		Rect ui_pos = new Rect(p.x - 250/d/2, Screen.height - p.y - 40/d, 250/d, 40/d);
 
+		//draw different bars based on activity type.
 		switch (PatronState) 
 		{
 			case(PatronStates.wandering):

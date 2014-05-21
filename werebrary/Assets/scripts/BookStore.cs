@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+//This class distrubutes randomn non-repeating books.
+//used to stock bookshelves and assign patrons books to read.
 public class BookStore {
 	
 
@@ -9,7 +11,8 @@ public class BookStore {
 		assignedBooks = new List<string>();
 	}
 
-	
+
+	//returns a book that hasn't been given out yet.
 	public string GetBook(){
 		
 		if (bookList.Length == assignedBooks.Count || assignedBooks == null) {
@@ -25,7 +28,8 @@ public class BookStore {
 	}
 	
 	List<string> assignedBooks;
-	
+
+	//half the books are authors. Oh well.
 	//http://www.goodreads.com/list/show/276.Best_Book_Titles + [].forEach.call(document.querySelectorAll("span[itemprop='name']"),function(el){console.log(el.innerHTML);});
 	string[] bookList = new string[] {"Do Androids Dream of Electric Sheep?",
 		"Philip K. Dick",
